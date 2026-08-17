@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Garden Planner :: garden-planner.html :: v1.1.0 -->
+<!-- Garden Planner :: garden-planner.html :: v2.5.1 -->
 <html lang="en" data-theme="garden">
 <head>
 <meta charset="utf-8">
@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600&family=DM+Sans:wght@300;400;500&display=swap">
 <style>
-/* Garden Planner v1.1.0. Fonts are additive only: the local stacks below carry the
+/* Garden Planner v2.5.1. Fonts are additive only: the local stacks below carry the
    design if the remote sheet never loads (offline, file:// use). */
 :root{
   --font-display:"Lora","Iowan Old Style",Georgia,"Times New Roman",serif;
@@ -178,6 +178,12 @@ main{max-width:1180px;margin:0 auto;padding:20px 16px 60px}
   position:relative;transition:background .1s,border-color .1s}
 @media (pointer:coarse){:root{--cell:44px}}
 .sq.filled{border-color:var(--line)}
+/* a square another plant is spreading over: still there, just quieter */
+.sq.held{border-style:dashed;cursor:pointer}
+.sq.held .held-mark{width:26%;height:26%;border-radius:50%;background:currentColor;opacity:.32;
+  color:var(--ink);display:block}
+.sq .more-mark{position:absolute;right:2px;bottom:1px;font-size:9px;font-weight:600;color:var(--muted);
+  line-height:1;pointer-events:none}
 .sq.friend{background:var(--good-bg)!important;border-color:var(--good-line);box-shadow:inset 0 0 0 1px var(--good-line)}
 .sq.foe{background:var(--bad-bg)!important;border-color:var(--bad-line);box-shadow:inset 0 0 0 1px var(--bad-line)}
 .sq.here{outline:2px solid var(--terracotta);outline-offset:1px}
@@ -270,6 +276,44 @@ textarea.input-sm{font-size:13px;line-height:1.4}
   .sq{border-color:#999!important;background:#fff!important}
   .note{border:1px solid #999}
 }
+
+/* this week */
+.task{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);
+  border-left:4px solid var(--line-strong);border-radius:var(--radius);padding:9px 12px;margin-bottom:6px;flex-wrap:wrap}
+.task.late{border-left-color:var(--bad-line)}
+.task.done{opacity:.55}
+.task-body{flex:1 1 160px;min-width:0}
+.task-when{white-space:nowrap}
+.task-kind{font-size:10px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;
+  padding:3px 8px;border-radius:9px;white-space:nowrap;border:1px solid}
+.tone-indoor{color:var(--ink);background:var(--indoor);border-color:var(--indoor)}
+.tone-transplant{color:var(--ink);background:var(--transplant);border-color:var(--transplant)}
+.tone-direct{color:var(--bg);background:var(--direct);border-color:var(--direct)}
+.tone-harvest{color:var(--ink);background:var(--harvest);border-color:var(--harvest)}
+.tone-muted{color:var(--muted);background:transparent;border-color:var(--line-strong)}
+/* seeds */
+.seed-row{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--good-line);
+  border-radius:var(--radius);padding:11px;margin-bottom:7px}
+.seed-row.short{border-left-color:var(--harvest)}
+.seed-stock{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;margin-top:7px}
+/* bed by bed */
+.gantt-label{justify-content:flex-start;text-align:left;font-size:11px;min-height:24px;padding:2px 6px;width:100%}
+.cal-track.gantt{height:24px}
+.gantt-bar{position:absolute;top:3px;bottom:3px;border-radius:4px;overflow:hidden;display:flex;align-items:center}
+.gantt-bar span{font-size:9px;padding:0 4px;color:var(--bg);white-space:nowrap;text-shadow:0 1px 0 rgba(0,0,0,.35)}
+:root[data-theme="contrast"] .gantt-bar span{color:#000;text-shadow:none}
+.gantt-today{position:absolute;top:0;bottom:0;width:2px;background:var(--terracotta)}
+/* harvest load */
+.load-chart{display:grid;grid-template-columns:repeat(53,1fr);align-items:end;gap:1px;height:120px;
+  background:var(--panel-2);border:1px solid var(--line-strong);border-radius:8px;padding:6px 4px;position:relative}
+.load-chart::before{content:"";position:absolute;left:4px;right:4px;bottom:calc(6px + var(--capacity,30%));
+  border-top:1px dashed var(--muted)}
+.load-col{display:flex;align-items:flex-end;height:100%}
+.load-col i{display:block;width:100%;background:var(--direct);border-radius:2px 2px 0 0;min-height:1px}
+.load-col.glut i{background:var(--harvest)}
+.load-axis{display:grid;grid-template-columns:repeat(12,1fr);font-size:9px;color:var(--muted);
+  text-transform:uppercase;letter-spacing:.04em;margin-top:2px}
+.load-axis span{text-align:center}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 @media print{.topbar,.hdr-actions,.palette,.btn{display:none!important} body{background:#fff}}
 </style>
@@ -297,8 +341,8 @@ textarea.input-sm{font-size:13px;line-height:1.4}
 <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
 <script>
 "use strict";
-/* Garden Planner v2.3.0. Single file, no build step, no server, GPL-3.0. */
-const APP = { name: "Garden Planner", file: "garden-planner.html", version: "2.3.0", schema: 6 };
+/* Garden Planner v2.5.1. Single file, no build step, no server, GPL-3.0. */
+const APP = { name: "Garden Planner", file: "garden-planner.html", version: "2.5.1", schema: 6 };
 
 /* ---------- plant library -------------------------------------------------
    per   = plants per square foot (Square Foot Gardening densities)
@@ -307,44 +351,44 @@ const APP = { name: "Garden Planner", file: "garden-planner.html", version: "2.3
    Every id in companions[] and avoid[] must exist in this list. The self test
    checks that, because dangling ids used to print raw slugs in the UI.        */
 const PLANT_LIBRARY = [
-  {id:"tomato",name:"Tomato",emoji:"\u{1F345}",per:1,color:"#e8604c",type:"veggie",place:"bed",family:"solanaceae",height:"tall",companions:["basil","carrot","parsley","marigold","borage","chive"],avoid:["fennel","pepper","potato","kale","broccoli","cabbage","dill"],zone7a:{indoor:"Feb-Mar",transplant:"May",direct:null,harvest:"Jul-Oct"}},
-  {id:"pepper",name:"Pepper",emoji:"\u{1FAD1}",per:1,color:"#5cb85c",type:"veggie",place:"bed",family:"solanaceae",height:"mid",companions:["basil","carrot","oregano","eggplant","marigold"],avoid:["fennel","tomato"],zone7a:{indoor:"Feb",transplant:"May",direct:null,harvest:"Jul-Oct"}},
-  {id:"cucumber",name:"Cucumber",emoji:"\u{1F952}",per:2,color:"#4cae4c",type:"veggie",place:"bed",family:"cucurbit",height:"tall",companions:["bean","dill","marigold","radish","corn","nasturtium","oregano"],avoid:["sage","potato","rosemary","thyme"],zone7a:{indoor:null,transplant:null,direct:"Apr-May",harvest:"Jun-Sep"}},
-  {id:"zucchini",name:"Zucchini",emoji:"\u{1FAB4}",per:1,color:"#3d9970",type:"veggie",place:"bed",family:"cucurbit",height:"mid",span:2,companions:["bean","dill","nasturtium","corn","borage"],avoid:["potato"],zone7a:{indoor:null,transplant:null,direct:"May",harvest:"Jun-Sep"}},
-  {id:"corn",name:"Corn",emoji:"\u{1F33D}",per:1,color:"#f1c40f",type:"veggie",place:"bed",family:"grass",height:"tall",companions:["bean","squash","cucumber","zucchini","marigold","nasturtium","sunflower"],avoid:["tomato","fennel","celery","beet"],zone7a:{indoor:null,transplant:null,direct:"May",harvest:"Aug-Sep"}},
-  {id:"bean",name:"Bush Bean",emoji:"\u{1FAD8}",per:9,color:"#82b74b",type:"veggie",place:"bed",family:"legume",height:"mid",companions:["corn","cucumber","squash","carrot","strawberry","marigold","nasturtium","radish","eggplant","cilantro","spinach","potato"],avoid:["onion","garlic","chive","fennel","beet","sunflower"],zone7a:{indoor:null,transplant:null,direct:"Apr-Jun",harvest:"Jun-Aug"}},
-  {id:"squash",name:"Squash",emoji:"\u{1F383}",per:1,color:"#e67e22",type:"veggie",place:"bed",family:"cucurbit",height:"mid",span:2,companions:["corn","bean","nasturtium","borage","marigold","oregano"],avoid:["potato","fennel"],zone7a:{indoor:null,transplant:null,direct:"May",harvest:"Jul-Sep"}},
-  {id:"pea",name:"Pea",emoji:"\u{1F7E2}",per:8,color:"#6abf69",type:"veggie",place:"bed",family:"legume",height:"tall",companions:["carrot","radish","spinach","lettuce"],avoid:["onion","garlic","chive","fennel"],zone7a:{indoor:null,transplant:null,direct:"Mar-Apr",harvest:"May-Jun"}},
-  {id:"lettuce",name:"Lettuce",emoji:"\u{1F957}",per:4,color:"#a8d8a8",type:"veggie",place:"bed",family:"daisy",height:"low",shade:"tolerant",companions:["carrot","radish","strawberry","chive","beet","pea","onion"],avoid:["celery"],zone7a:{indoor:"Feb-Mar",transplant:"Mar-Apr",direct:"Mar-May",harvest:"May-Jun"}},
-  {id:"spinach",name:"Spinach",emoji:"\u{1F33F}",per:9,color:"#2ecc71",type:"veggie",place:"bed",family:"goosefoot",height:"low",shade:"tolerant",companions:["strawberry","pea","bean","cilantro"],avoid:["potato"],zone7a:{indoor:null,transplant:null,direct:"Mar-Apr",harvest:"Apr-Jun"}},
-  {id:"kale",name:"Kale",emoji:"\u{1F96C}",per:1,color:"#27ae60",type:"veggie",place:"bed",family:"brassica",height:"mid",shade:"tolerant",companions:["dill","sage","potato","celery","onion","beet"],avoid:["strawberry","tomato"],zone7a:{indoor:"Feb",transplant:"Mar-Apr",direct:"Mar-Apr",harvest:"May-Nov"}},
-  {id:"carrot",name:"Carrot",emoji:"\u{1F955}",per:16,color:"#e67e22",type:"veggie",place:"bed",family:"carrot",height:"low",companions:["onion","rosemary","sage","tomato","pea","lettuce","radish","chive","bean","pepper"],avoid:["dill","fennel"],zone7a:{indoor:null,transplant:null,direct:"Mar-May",harvest:"Jun-Aug"}},
-  {id:"radish",name:"Radish",emoji:"\u{1F534}",per:16,color:"#e74c3c",type:"veggie",place:"bed",family:"brassica",height:"low",shade:"tolerant",companions:["carrot","lettuce","cucumber","pea","bean","spinach"],avoid:[],zone7a:{indoor:null,transplant:null,direct:"Mar-Apr",harvest:"Apr-May"}},
-  {id:"beet",name:"Beet",emoji:"\u{1F7E3}",per:9,color:"#8e44ad",type:"veggie",place:"bed",family:"goosefoot",height:"low",shade:"tolerant",companions:["onion","lettuce","garlic","kale","cabbage"],avoid:["bean","corn"],zone7a:{indoor:null,transplant:null,direct:"Mar-May",harvest:"Jun-Aug"}},
-  {id:"onion",name:"Onion",emoji:"\u{1F9C5}",per:16,color:"#d4ac0d",type:"veggie",place:"bed",family:"allium",height:"low",companions:["carrot","beet","lettuce","tomato","kale","cabbage","strawberry"],avoid:["bean","pea","sage"],zone7a:{indoor:"Jan-Feb",transplant:"Mar-Apr",direct:"Mar",harvest:"Jul-Aug"}},
-  {id:"garlic",name:"Garlic",emoji:"\u{1F9C4}",per:16,color:"#c8b400",type:"veggie",place:"bed",family:"allium",height:"low",companions:["tomato","beet","carrot","strawberry"],avoid:["bean","pea"],zone7a:{indoor:null,transplant:null,direct:"Oct-Nov",harvest:"Jun-Jul"}},
-  {id:"broccoli",name:"Broccoli",emoji:"\u{1F966}",per:1,color:"#1e8449",type:"veggie",place:"bed",family:"brassica",height:"mid",companions:["celery","dill","sage","potato","onion","beet"],avoid:["strawberry","tomato"],zone7a:{indoor:"Feb",transplant:"Mar-Apr",direct:null,harvest:"May-Jun"}},
-  {id:"cabbage",name:"Cabbage",emoji:"\u{1F962}",per:1,color:"#7fb069",type:"veggie",place:"bed",family:"brassica",height:"mid",companions:["celery","dill","sage","potato","onion","beet","rosemary","thyme"],avoid:["strawberry","tomato"],zone7a:{indoor:"Feb",transplant:"Mar-Apr",direct:null,harvest:"Jun-Jul"}},
-  {id:"celery",name:"Celery",emoji:"\u{1F33E}",per:4,color:"#9dc183",type:"veggie",place:"bed",family:"carrot",height:"mid",companions:["broccoli","cabbage","bean"],avoid:["corn","lettuce"],zone7a:{indoor:"Feb-Mar",transplant:"Apr-May",direct:null,harvest:"Aug-Oct"}},
-  {id:"potato",name:"Potato",emoji:"\u{1F954}",per:1,color:"#c8a96e",type:"veggie",place:"bed",family:"solanaceae",height:"mid",companions:["bean","corn","cabbage","marigold","kale","broccoli"],avoid:["tomato","cucumber","zucchini","squash","spinach","sunflower","rosemary"],zone7a:{indoor:null,transplant:null,direct:"Mar-Apr",harvest:"Jun-Aug"}},
-  {id:"eggplant",name:"Eggplant",emoji:"\u{1F346}",per:1,color:"#6c3483",type:"veggie",place:"bed",family:"solanaceae",height:"mid",companions:["basil","bean","pepper","thyme","marigold"],avoid:["fennel"],zone7a:{indoor:"Feb-Mar",transplant:"May",direct:null,harvest:"Jul-Sep"}},
-  {id:"strawberry",name:"Strawberry",emoji:"\u{1F353}",per:4,color:"#e74c3c",type:"fruit",place:"bed",family:"rose",height:"low",companions:["spinach","lettuce","borage","thyme","bean","onion","garlic"],avoid:["cabbage","broccoli","kale"],zone7a:{indoor:null,transplant:"Mar-Apr",direct:null,harvest:"May-Jun"}},
-  {id:"basil",name:"Basil",emoji:"\u{1F33F}",per:4,color:"#27ae60",type:"herb",place:"bed",family:"mint",height:"low",companions:["tomato","pepper","eggplant","oregano","borage"],avoid:["sage","rosemary"],zone7a:{indoor:"Mar-Apr",transplant:"May",direct:"May",harvest:"Jun-Sep"}},
-  {id:"parsley",name:"Parsley",emoji:"\u{1F331}",per:4,color:"#2ecc71",type:"herb",place:"bed",family:"carrot",height:"low",shade:"tolerant",companions:["tomato","carrot","chive","corn"],avoid:["mint","lettuce"],zone7a:{indoor:"Feb-Mar",transplant:"Apr",direct:"Apr",harvest:"May-Oct"}},
-  {id:"dill",name:"Dill",emoji:"\u{1F33E}",per:4,color:"#a9cce3",type:"herb",place:"bed",family:"carrot",height:"mid",companions:["cucumber","lettuce","onion","cabbage","broccoli","kale"],avoid:["carrot","tomato"],zone7a:{indoor:null,transplant:null,direct:"Apr-May",harvest:"Jun-Aug"}},
-  {id:"cilantro",name:"Cilantro",emoji:"\u{1F33F}",per:9,color:"#45b39d",type:"herb",place:"bed",family:"carrot",height:"low",shade:"tolerant",companions:["spinach","bean"],avoid:["fennel"],zone7a:{indoor:null,transplant:null,direct:"Mar-Apr",harvest:"May-Jun"}},
-  {id:"chive",name:"Chive",emoji:"\u{1F338}",per:16,color:"#bb8fce",type:"herb",place:"bed",family:"allium",height:"low",shade:"tolerant",companions:["carrot","tomato","lettuce","parsley","strawberry"],avoid:["bean","pea"],zone7a:{indoor:"Feb",transplant:"Mar",direct:"Mar",harvest:"May-Oct"}},
-  {id:"mint",name:"Mint",emoji:"\u{1F33F}",per:1,color:"#1abc9c",type:"herb",place:"container",family:"mint",height:"low",shade:"tolerant",companions:["cabbage","broccoli","kale"],avoid:["parsley"],zone7a:{indoor:null,transplant:"Apr",direct:null,harvest:"May-Oct"}},
-  {id:"rosemary",name:"Rosemary",emoji:"\u{1F33F}",per:1,color:"#5d6d7e",type:"herb",place:"bed",family:"mint",height:"mid",span:2,companions:["carrot","bean","sage","cabbage","thyme"],avoid:["cucumber","potato","basil"],zone7a:{indoor:"Jan-Feb",transplant:"Apr",direct:null,harvest:"Year-round"}},
-  {id:"sage",name:"Sage",emoji:"\u{1F33F}",per:1,color:"#7f8c8d",type:"herb",place:"bed",family:"mint",height:"mid",span:2,companions:["carrot","bean","rosemary","cabbage","kale","broccoli"],avoid:["cucumber","onion","basil"],zone7a:{indoor:"Jan-Feb",transplant:"Apr",direct:null,harvest:"Year-round"}},
-  {id:"thyme",name:"Thyme",emoji:"\u{1F33F}",per:4,color:"#96a69c",type:"herb",place:"bed",family:"mint",height:"low",companions:["cabbage","tomato","eggplant","strawberry","rosemary"],avoid:["cucumber"],zone7a:{indoor:"Jan-Feb",transplant:"Apr",direct:null,harvest:"Year-round"}},
-  {id:"oregano",name:"Oregano",emoji:"\u{1FAD9}",per:4,color:"#8fae6a",type:"herb",place:"bed",family:"mint",height:"low",companions:["pepper","squash","tomato","cucumber","basil"],avoid:[],zone7a:{indoor:"Feb-Mar",transplant:"Apr-May",direct:null,harvest:"Jun-Oct"}},
-  {id:"fennel",name:"Fennel",emoji:"\u{1F33F}",per:1,color:"#b7c68b",type:"herb",place:"isolate",family:"carrot",height:"tall",companions:[],avoid:["tomato","pepper","bean","corn","cucumber","squash","carrot","eggplant","cilantro","pea"],zone7a:{indoor:"Feb-Mar",transplant:"Apr",direct:"Apr",harvest:"Jul-Oct"}},
-  {id:"marigold",name:"Marigold",emoji:"\u{1F33C}",per:4,color:"#f39c12",type:"flower",place:"bed",family:"daisy",height:"low",companions:["tomato","pepper","bean","cucumber","potato","squash","corn","eggplant"],avoid:[],zone7a:{indoor:"Mar",transplant:"May",direct:"May",harvest:"Jun-Oct"}},
-  {id:"nasturtium",name:"Nasturtium",emoji:"\u{1F338}",per:4,color:"#e67e22",type:"flower",place:"bed",family:"nasturtium",height:"low",shade:"tolerant",companions:["cucumber","bean","tomato","squash","corn","zucchini"],avoid:[],zone7a:{indoor:null,transplant:null,direct:"Apr-May",harvest:"Jun-Oct"}},
-  {id:"borage",name:"Borage",emoji:"\u{1F499}",per:1,color:"#3498db",type:"flower",place:"bed",family:"borage",height:"mid",shade:"tolerant",companions:["tomato","strawberry","squash","zucchini","basil"],avoid:[],zone7a:{indoor:null,transplant:null,direct:"Apr-May",harvest:"Jun-Sep"}},
-  {id:"sunflower",name:"Sunflower",emoji:"\u{1F33B}",per:1,color:"#f4d03f",type:"flower",place:"border",family:"daisy",height:"tall",companions:["cucumber","squash","corn","nasturtium"],avoid:["potato","bean"],zone7a:{indoor:null,transplant:null,direct:"Apr-May",harvest:"Aug-Sep"}},
-  {id:"lavender",name:"Lavender",emoji:"\u{1F49C}",per:1,color:"#9b8ec4",type:"flower",place:"border",family:"mint",height:"mid",span:2,companions:["cabbage","broccoli","strawberry","thyme","rosemary","sage"],avoid:[],zone7a:{indoor:"Jan-Feb",transplant:"Apr-May",direct:null,harvest:"Jun-Aug"}}
+  {id:"tomato",name:"Tomato",emoji:"\u{1F345}",per:1,color:"#e8604c",type:"veggie",place:"bed",lbs:8,life:4,family:"solanaceae",height:"tall",companions:["basil","carrot","parsley","marigold","borage","chive"],avoid:["fennel","pepper","potato","kale","broccoli","cabbage","dill"],zone7a:{indoor:"Feb-Mar",transplant:"May",direct:null,harvest:"Jul-Oct"}},
+  {id:"pepper",name:"Pepper",emoji:"\u{1FAD1}",per:1,color:"#5cb85c",type:"veggie",place:"bed",lbs:2,life:2,family:"solanaceae",height:"mid",companions:["basil","carrot","oregano","eggplant","marigold"],avoid:["fennel","tomato"],zone7a:{indoor:"Feb",transplant:"May",direct:null,harvest:"Jul-Oct"}},
+  {id:"cucumber",name:"Cucumber",emoji:"\u{1F952}",per:2,color:"#4cae4c",type:"veggie",place:"bed",lbs:5,life:5,family:"cucurbit",height:"tall",companions:["bean","dill","marigold","radish","corn","nasturtium","oregano"],avoid:["sage","potato","rosemary","thyme"],zone7a:{indoor:null,transplant:null,direct:"Apr-May",harvest:"Jun-Sep"}},
+  {id:"zucchini",name:"Zucchini",emoji:"\u{1FAB4}",per:1,color:"#3d9970",type:"veggie",place:"bed",lbs:6,life:4,family:"cucurbit",height:"mid",span:2,companions:["bean","dill","nasturtium","corn","borage"],avoid:["potato"],zone7a:{indoor:null,transplant:null,direct:"May",harvest:"Jun-Sep"}},
+  {id:"corn",name:"Corn",emoji:"\u{1F33D}",per:1,color:"#f1c40f",type:"veggie",place:"bed",lbs:0.5,life:2,family:"grass",height:"tall",companions:["bean","squash","cucumber","zucchini","marigold","nasturtium","sunflower"],avoid:["tomato","fennel","celery","beet"],zone7a:{indoor:null,transplant:null,direct:"May",harvest:"Aug-Sep"}},
+  {id:"bean",name:"Bush Bean",emoji:"\u{1FAD8}",per:9,color:"#82b74b",type:"veggie",place:"bed",lbs:1.5,life:3,family:"legume",height:"mid",companions:["corn","cucumber","squash","carrot","strawberry","marigold","nasturtium","radish","eggplant","cilantro","spinach","potato"],avoid:["onion","garlic","chive","fennel","beet","sunflower"],zone7a:{indoor:null,transplant:null,direct:"Apr-Jun",harvest:"Jun-Aug"}},
+  {id:"squash",name:"Squash",emoji:"\u{1F383}",per:1,color:"#e67e22",type:"veggie",place:"bed",lbs:5,life:4,family:"cucurbit",height:"mid",span:2,companions:["corn","bean","nasturtium","borage","marigold","oregano"],avoid:["potato","fennel"],zone7a:{indoor:null,transplant:null,direct:"May",harvest:"Jul-Sep"}},
+  {id:"pea",name:"Pea",emoji:"\u{1F7E2}",per:8,color:"#6abf69",type:"veggie",place:"bed",lbs:0.8,life:3,family:"legume",height:"tall",companions:["carrot","radish","spinach","lettuce"],avoid:["onion","garlic","chive","fennel"],zone7a:{indoor:null,transplant:null,direct:"Mar-Apr",harvest:"May-Jun"}},
+  {id:"lettuce",name:"Lettuce",emoji:"\u{1F957}",per:4,color:"#a8d8a8",type:"veggie",place:"bed",lbs:1.5,life:5,family:"daisy",height:"low",shade:"tolerant",companions:["carrot","radish","strawberry","chive","beet","pea","onion"],avoid:["celery"],zone7a:{indoor:"Feb-Mar",transplant:"Mar-Apr",direct:"Mar-May",harvest:"May-Jun"}},
+  {id:"spinach",name:"Spinach",emoji:"\u{1F33F}",per:9,color:"#2ecc71",type:"veggie",place:"bed",lbs:1,life:2,family:"goosefoot",height:"low",shade:"tolerant",companions:["strawberry","pea","bean","cilantro"],avoid:["potato"],zone7a:{indoor:null,transplant:null,direct:"Mar-Apr",harvest:"Apr-Jun"}},
+  {id:"kale",name:"Kale",emoji:"\u{1F96C}",per:1,color:"#27ae60",type:"veggie",place:"bed",lbs:3,life:4,family:"brassica",height:"mid",shade:"tolerant",companions:["dill","sage","potato","celery","onion","beet"],avoid:["strawberry","tomato"],zone7a:{indoor:"Feb",transplant:"Mar-Apr",direct:"Mar-Apr",harvest:"May-Nov"}},
+  {id:"carrot",name:"Carrot",emoji:"\u{1F955}",per:16,color:"#e67e22",type:"veggie",place:"bed",lbs:2,life:3,family:"carrot",height:"low",companions:["onion","rosemary","sage","tomato","pea","lettuce","radish","chive","bean","pepper"],avoid:["dill","fennel"],zone7a:{indoor:null,transplant:null,direct:"Mar-May",harvest:"Jun-Aug"}},
+  {id:"radish",name:"Radish",emoji:"\u{1F534}",per:16,color:"#e74c3c",type:"veggie",place:"bed",lbs:1,life:4,family:"brassica",height:"low",shade:"tolerant",companions:["carrot","lettuce","cucumber","pea","bean","spinach"],avoid:[],zone7a:{indoor:null,transplant:null,direct:"Mar-Apr",harvest:"Apr-May"}},
+  {id:"beet",name:"Beet",emoji:"\u{1F7E3}",per:9,color:"#8e44ad",type:"veggie",place:"bed",lbs:2,life:4,family:"goosefoot",height:"low",shade:"tolerant",companions:["onion","lettuce","garlic","kale","cabbage"],avoid:["bean","corn"],zone7a:{indoor:null,transplant:null,direct:"Mar-May",harvest:"Jun-Aug"}},
+  {id:"onion",name:"Onion",emoji:"\u{1F9C5}",per:16,color:"#d4ac0d",type:"veggie",place:"bed",lbs:2,life:1,family:"allium",height:"low",companions:["carrot","beet","lettuce","tomato","kale","cabbage","strawberry"],avoid:["bean","pea","sage"],zone7a:{indoor:"Jan-Feb",transplant:"Mar-Apr",direct:"Mar",harvest:"Jul-Aug"}},
+  {id:"garlic",name:"Garlic",emoji:"\u{1F9C4}",per:16,color:"#c8b400",type:"veggie",place:"bed",lbs:1.5,life:1,prop:"cloves",family:"allium",height:"low",companions:["tomato","beet","carrot","strawberry"],avoid:["bean","pea"],zone7a:{indoor:null,transplant:null,direct:"Oct-Nov",harvest:"Jun-Jul"}},
+  {id:"broccoli",name:"Broccoli",emoji:"\u{1F966}",per:1,color:"#1e8449",type:"veggie",place:"bed",lbs:1.5,life:4,family:"brassica",height:"mid",companions:["celery","dill","sage","potato","onion","beet"],avoid:["strawberry","tomato"],zone7a:{indoor:"Feb",transplant:"Mar-Apr",direct:null,harvest:"May-Jun"}},
+  {id:"cabbage",name:"Cabbage",emoji:"\u{1F962}",per:1,color:"#7fb069",type:"veggie",place:"bed",lbs:3,life:4,family:"brassica",height:"mid",companions:["celery","dill","sage","potato","onion","beet","rosemary","thyme"],avoid:["strawberry","tomato"],zone7a:{indoor:"Feb",transplant:"Mar-Apr",direct:null,harvest:"Jun-Jul"}},
+  {id:"celery",name:"Celery",emoji:"\u{1F33E}",per:4,color:"#9dc183",type:"veggie",place:"bed",lbs:2,life:3,family:"carrot",height:"mid",companions:["broccoli","cabbage","bean"],avoid:["corn","lettuce"],zone7a:{indoor:"Feb-Mar",transplant:"Apr-May",direct:null,harvest:"Aug-Oct"}},
+  {id:"potato",name:"Potato",emoji:"\u{1F954}",per:1,color:"#c8a96e",type:"veggie",place:"bed",lbs:3,life:1,prop:"seed potatoes",family:"solanaceae",height:"mid",companions:["bean","corn","cabbage","marigold","kale","broccoli"],avoid:["tomato","cucumber","zucchini","squash","spinach","sunflower","rosemary"],zone7a:{indoor:null,transplant:null,direct:"Mar-Apr",harvest:"Jun-Aug"}},
+  {id:"eggplant",name:"Eggplant",emoji:"\u{1F346}",per:1,color:"#6c3483",type:"veggie",place:"bed",lbs:3,life:4,family:"solanaceae",height:"mid",companions:["basil","bean","pepper","thyme","marigold"],avoid:["fennel"],zone7a:{indoor:"Feb-Mar",transplant:"May",direct:null,harvest:"Jul-Sep"}},
+  {id:"strawberry",name:"Strawberry",emoji:"\u{1F353}",per:4,color:"#e74c3c",type:"fruit",place:"bed",lbs:1,life:1,prop:"crowns",family:"rose",height:"low",companions:["spinach","lettuce","borage","thyme","bean","onion","garlic"],avoid:["cabbage","broccoli","kale"],zone7a:{indoor:null,transplant:"Mar-Apr",direct:null,harvest:"May-Jun"}},
+  {id:"basil",name:"Basil",emoji:"\u{1F33F}",per:4,color:"#27ae60",type:"herb",place:"bed",lbs:0.5,life:4,family:"mint",height:"low",companions:["tomato","pepper","eggplant","oregano","borage"],avoid:["sage","rosemary"],zone7a:{indoor:"Mar-Apr",transplant:"May",direct:"May",harvest:"Jun-Sep"}},
+  {id:"parsley",name:"Parsley",emoji:"\u{1F331}",per:4,color:"#2ecc71",type:"herb",place:"bed",lbs:0.4,life:1,family:"carrot",height:"low",shade:"tolerant",companions:["tomato","carrot","chive","corn"],avoid:["mint","lettuce"],zone7a:{indoor:"Feb-Mar",transplant:"Apr",direct:"Apr",harvest:"May-Oct"}},
+  {id:"dill",name:"Dill",emoji:"\u{1F33E}",per:4,color:"#a9cce3",type:"herb",place:"bed",lbs:0.3,life:3,family:"carrot",height:"mid",companions:["cucumber","lettuce","onion","cabbage","broccoli","kale"],avoid:["carrot","tomato"],zone7a:{indoor:null,transplant:null,direct:"Apr-May",harvest:"Jun-Aug"}},
+  {id:"cilantro",name:"Cilantro",emoji:"\u{1F33F}",per:9,color:"#45b39d",type:"herb",place:"bed",lbs:0.3,life:3,family:"carrot",height:"low",shade:"tolerant",companions:["spinach","bean"],avoid:["fennel"],zone7a:{indoor:null,transplant:null,direct:"Mar-Apr",harvest:"May-Jun"}},
+  {id:"chive",name:"Chive",emoji:"\u{1F338}",per:16,color:"#bb8fce",type:"herb",place:"bed",lbs:0.3,life:1,family:"allium",height:"low",shade:"tolerant",companions:["carrot","tomato","lettuce","parsley","strawberry"],avoid:["bean","pea"],zone7a:{indoor:"Feb",transplant:"Mar",direct:"Mar",harvest:"May-Oct"}},
+  {id:"mint",name:"Mint",emoji:"\u{1F33F}",per:1,color:"#1abc9c",type:"herb",place:"container",lbs:0.4,life:2,prop:"cuttings or a plant",family:"mint",height:"low",shade:"tolerant",companions:["cabbage","broccoli","kale"],avoid:["parsley"],zone7a:{indoor:null,transplant:"Apr",direct:null,harvest:"May-Oct"}},
+  {id:"rosemary",name:"Rosemary",emoji:"\u{1F33F}",per:1,color:"#5d6d7e",type:"herb",place:"bed",lbs:0.3,life:2,prop:"cuttings or a plant",family:"mint",height:"mid",span:2,companions:["carrot","bean","sage","cabbage","thyme"],avoid:["cucumber","potato","basil"],zone7a:{indoor:"Jan-Feb",transplant:"Apr",direct:null,harvest:"Year-round"}},
+  {id:"sage",name:"Sage",emoji:"\u{1F33F}",per:1,color:"#7f8c8d",type:"herb",place:"bed",lbs:0.3,life:3,family:"mint",height:"mid",span:2,companions:["carrot","bean","rosemary","cabbage","kale","broccoli"],avoid:["cucumber","onion","basil"],zone7a:{indoor:"Jan-Feb",transplant:"Apr",direct:null,harvest:"Year-round"}},
+  {id:"thyme",name:"Thyme",emoji:"\u{1F33F}",per:4,color:"#96a69c",type:"herb",place:"bed",lbs:0.2,life:3,family:"mint",height:"low",companions:["cabbage","tomato","eggplant","strawberry","rosemary"],avoid:["cucumber"],zone7a:{indoor:"Jan-Feb",transplant:"Apr",direct:null,harvest:"Year-round"}},
+  {id:"oregano",name:"Oregano",emoji:"\u{1FAD9}",per:4,color:"#8fae6a",type:"herb",place:"bed",lbs:0.3,life:3,family:"mint",height:"low",companions:["pepper","squash","tomato","cucumber","basil"],avoid:[],zone7a:{indoor:"Feb-Mar",transplant:"Apr-May",direct:null,harvest:"Jun-Oct"}},
+  {id:"fennel",name:"Fennel",emoji:"\u{1F33F}",per:1,color:"#b7c68b",type:"herb",place:"isolate",lbs:1.5,life:3,family:"carrot",height:"tall",companions:[],avoid:["tomato","pepper","bean","corn","cucumber","squash","carrot","eggplant","cilantro","pea"],zone7a:{indoor:"Feb-Mar",transplant:"Apr",direct:"Apr",harvest:"Jul-Oct"}},
+  {id:"marigold",name:"Marigold",emoji:"\u{1F33C}",per:4,color:"#f39c12",type:"flower",place:"bed",lbs:0,life:2,family:"daisy",height:"low",companions:["tomato","pepper","bean","cucumber","potato","squash","corn","eggplant"],avoid:[],zone7a:{indoor:"Mar",transplant:"May",direct:"May",harvest:"Jun-Oct"}},
+  {id:"nasturtium",name:"Nasturtium",emoji:"\u{1F338}",per:4,color:"#e67e22",type:"flower",place:"bed",lbs:0.2,life:4,family:"nasturtium",height:"low",shade:"tolerant",companions:["cucumber","bean","tomato","squash","corn","zucchini"],avoid:[],zone7a:{indoor:null,transplant:null,direct:"Apr-May",harvest:"Jun-Oct"}},
+  {id:"borage",name:"Borage",emoji:"\u{1F499}",per:1,color:"#3498db",type:"flower",place:"bed",lbs:0.2,life:3,family:"borage",height:"mid",shade:"tolerant",companions:["tomato","strawberry","squash","zucchini","basil"],avoid:[],zone7a:{indoor:null,transplant:null,direct:"Apr-May",harvest:"Jun-Sep"}},
+  {id:"sunflower",name:"Sunflower",emoji:"\u{1F33B}",per:1,color:"#f4d03f",type:"flower",place:"border",lbs:0.3,life:3,family:"daisy",height:"tall",companions:["cucumber","squash","corn","nasturtium"],avoid:["potato","bean"],zone7a:{indoor:null,transplant:null,direct:"Apr-May",harvest:"Aug-Sep"}},
+  {id:"lavender",name:"Lavender",emoji:"\u{1F49C}",per:1,color:"#9b8ec4",type:"flower",place:"border",lbs:0.2,life:2,prop:"a plant",family:"mint",height:"mid",span:2,companions:["cabbage","broccoli","strawberry","thyme","rosemary","sage"],avoid:[],zone7a:{indoor:"Jan-Feb",transplant:"Apr-May",direct:null,harvest:"Jun-Aug"}}
 ];
 
 /* Which pairings are more than repetition. "documented" means the effect has
@@ -371,6 +415,16 @@ const FAMILY_NAMES = {
    advice for the first four. */
 const ROTATE_YEARS = {solanaceae:3, brassica:3, allium:3, cucurbit:2, goosefoot:2, carrot:2, legume:1};
 const HEIGHT_RANK = {low:0, mid:1, tall:2};
+/* Rough weekly appetite for fresh produce, per person, in pounds. A glut is
+   what arrives faster than the household and the freezer can take it. */
+const APPETITE_LB = 10;
+const TASK_KINDS = {
+  indoor:{label:"Start indoors", tone:"indoor", records:"sown"},
+  sow:{label:"Direct sow", tone:"direct", records:"sown"},
+  out:{label:"Plant out", tone:"transplant", records:"out"},
+  pick:{label:"Picking opens", tone:"harvest", records:"first"},
+  clear:{label:"Clear the square", tone:"muted", records:"last"}
+};
 
 /* ---------- drawn plant marks ---------------------------------------------
    Emoji were doing this job badly. There is no pumpkin or squash character in
@@ -511,7 +565,8 @@ function initialPlot(){
 }
 
 function initialFarm(){
-  return {name:"My garden", zone:"7a", custom:false, lastFrost:[3,7], firstFrost:[9,28]};
+  return {name:"My garden", zone:"7a", custom:false, lastFrost:[3,7], firstFrost:[9,28],
+          people:2, seeds:[]};
 }
 function initialLayout(name){
   return {id:"layout_" + Date.now() + "_" + Math.floor(Math.random() * 1000),
@@ -575,7 +630,9 @@ function h(tag, props){
     if (k.slice(0, 5) === "aria-"){ el.setAttribute(k, String(v)); continue; }
     if (v === false) continue;
     if (k === "class") el.className = v;
-    else if (k === "style") Object.assign(el.style, v);
+    else if (k === "style") for (const sk in v){
+      if (sk.slice(0, 2) === "--") el.style.setProperty(sk, v[sk]); else el.style[sk] = v[sk];
+    }
     else if (k === "text") el.textContent = String(v);
     else if (k.slice(0,2) === "on") el.addEventListener(k.slice(2).toLowerCase(), v);
     else el.setAttribute(k, v === true ? "" : String(v));
@@ -644,7 +701,7 @@ const state = {
   ui: {tab:"planner", theme:"garden", selected:null, filterType:"all", search:"",
        calMine:false, debug:false, hover:null, testResults:null, editing:null, dragging:null,
        day:todayDoy(), inspect:null, evidenceOnly:false, painting:false, journalFilter:"all",
-       emojiMarks:false}
+       emojiMarks:false, mode:"today", horizon:7, showDone:false, calView:"timing", gantt:null}
 };
 state.activeId = state.layouts[0].id;
 
@@ -907,20 +964,41 @@ function fits(bed, anchor, id){
   const r = Math.floor(anchor / bed.cols), c = anchor % bed.cols;
   return (r + n <= bed.rows) && (c + n <= bed.cols);
 }
-/* What stands in each square on a given day. */
+/* What stands in each square. A day of null is the whole season at once, which
+   is how you plan in February: every square shows its first crop of the year and
+   says how many follow. */
+function seasonView(){ return state.ui.mode === "season"; }
+function viewDay(){ return seasonView() ? null : state.ui.day; }
 function bedCellsAt(bed, day){
+  const whole = (day === null || day === undefined);
   const out = new Array(bed.cols * bed.rows).fill(null);
-  (bed.plantings || []).forEach(function(pl){
-    if (!inWindow(pl, day)) return;
+  const list = (bed.plantings || []).slice().sort(function(a, b){ return a.s - b.s; });
+  list.forEach(function(pl){
+    if (!whole && !inWindow(pl, day)) return;
     coverage(bed, pl.i, pl.p).forEach(function(idx, k){
-      out[idx] = {p:pl.p, pl:pl, anchor:k === 0};
+      if (out[idx]) { out[idx].more++; return; }
+      out[idx] = {p:pl.p, pl:pl, anchor:k === 0, more:0};
     });
   });
   return out;
 }
+function plantingsAt(bed, idx, day){
+  const whole = (day === null || day === undefined);
+  return (bed.plantings || []).filter(function(pl){
+    if (!whole && !inWindow(pl, day)) return false;
+    return coverage(bed, pl.i, pl.p).indexOf(idx) >= 0;
+  });
+}
+/* Do these two hold the ground together? On a given day, both are simply live.
+   Across a season, they have to overlap in time to be in each other's way. */
+function together(a, b, day){
+  if (day === null || day === undefined) return windowsClash(a, b);
+  return inWindow(a, day) && inWindow(b, day);
+}
 function idsAt(bed, day){
+  const whole = (day === null || day === undefined);
   const seen = {};
-  (bed.plantings || []).forEach(function(pl){ if (inWindow(pl, day)) seen[pl.p] = true; });
+  (bed.plantings || []).forEach(function(pl){ if (whole || inWindow(pl, day)) seen[pl.p] = true; });
   return Object.keys(seen);
 }
 function plantingsCovering(bed, idx){
@@ -1021,53 +1099,60 @@ function tally(day){
    share the ground on the same day, and sharing a bed is a milder thing than
    sitting in the next square. */
 function bedConflicts(bed, day){
-  const cells = bedCellsAt(bed, day);
   const near = [], far = [];
   const pairKey = function(a, b){ return [plantName(a), plantName(b)].sort().join(" and "); };
   const ids = idsAt(bed, day);
   for (let i = 0; i < ids.length; i++)
     for (let j = i + 1; j < ids.length; j++)
       if (relation(ids[i], ids[j]) === "foe") far.push(pairKey(ids[i], ids[j]));
-  cells.forEach(function(cell, idx){
-    if (!cell) return;
+  for (let idx = 0; idx < bed.cols * bed.rows; idx++){
     const r = Math.floor(idx / bed.cols), c = idx % bed.cols;
+    const here = plantingsAt(bed, idx, day);
+    if (!here.length) continue;
     [[0,1],[1,0]].forEach(function(d){
       const rr = r + d[0], cc = c + d[1];
       if (rr >= bed.rows || cc >= bed.cols) return;
-      const other = cells[rr * bed.cols + cc];
-      if (!other || other.p === cell.p) return;
-      if (relation(cell.p, other.p) === "foe") near.push(pairKey(cell.p, other.p));
+      plantingsAt(bed, rr * bed.cols + cc, day).forEach(function(other){
+        here.forEach(function(mine){
+          if (mine === other || mine.p === other.p) return;
+          if (!together(mine, other, day)) return;
+          if (relation(mine.p, other.p) === "foe") near.push(pairKey(mine.p, other.p));
+        });
+      });
     });
-  });
+  }
   const nearSet = Array.from(new Set(near));
   return {near:nearSet, far:Array.from(new Set(far)).filter(function(x){ return nearSet.indexOf(x) < 0; })};
 }
 /* North is up. A tall plant throws its shade northward, onto whatever sits in
-   the rows above it. */
+   the rows above it, for as long as the two share the ground. */
 function shadeWarnings(bed, day){
-  const cells = bedCellsAt(bed, day);
   const out = [];
-  cells.forEach(function(cell, idx){
-    if (!cell || heightOf(cell.p) < 2) return;
+  for (let idx = 0; idx < bed.cols * bed.rows; idx++){
+    const tall = plantingsAt(bed, idx, day).filter(function(pl){ return heightOf(pl.p) >= 2; });
+    if (!tall.length) continue;
     const r = Math.floor(idx / bed.cols), c = idx % bed.cols;
     for (let back = 1; back <= 2; back++){
       const rr = r - back;
-      if (rr < 0) return;
+      if (rr < 0) break;
       for (let dc = -1; dc <= 1; dc++){
         const cc = c + dc;
         if (cc < 0 || cc >= bed.cols) continue;
-        const other = cells[rr * bed.cols + cc];
-        if (!other || other.p === cell.p) continue;
-        const p = PLANT_MAP[other.p];
-        if (heightOf(other.p) >= 2 || (p && p.shade === "tolerant")) continue;
-        /* Being shaded by a friend is usually the point. Beans climb the corn
-           and squash runs under it, and none of that wants a warning. */
-        if (relation(cell.p, other.p) === "friend") continue;
-        out.push(plantName(cell.p) + " will shade the " + plantName(other.p).toLowerCase() +
-                 " to its north. Move the tall row to the north edge, or use the shade for something that wants it.");
+        plantingsAt(bed, rr * bed.cols + cc, day).forEach(function(other){
+          const p = PLANT_MAP[other.p];
+          if (heightOf(other.p) >= 2 || (p && p.shade === "tolerant")) return;
+          tall.forEach(function(t){
+            if (t.p === other.p || !together(t, other, day)) return;
+            /* Being shaded by a friend is usually the point. Beans climb the corn
+               and squash runs under it, and none of that wants a warning. */
+            if (relation(t.p, other.p) === "friend") return;
+            out.push(plantName(t.p) + " will shade the " + plantName(other.p).toLowerCase() +
+                     " to its north. Move the tall row to the north edge, or use the shade for something that wants it.");
+          });
+        });
       }
     }
-  });
+  }
   return Array.from(new Set(out));
 }
 /* Shade does not stop at the bed frame. A tall crop on the north row of the bed
@@ -1079,25 +1164,22 @@ function plotShadeWarnings(bed, day){
   const southId = state.plot.slots[slotAt(pos.r + 1, pos.c)];
   const south = southId ? bedById(southId) : null;
   if (!south) return [];
-  const theirs = bedCellsAt(south, day);
   const tall = [];
-  for (let c = 0; c < south.cols; c++){
-    const cell = theirs[c];
-    if (cell && heightOf(cell.p) >= 2 && tall.indexOf(cell.p) < 0) tall.push(cell.p);
-  }
+  for (let c = 0; c < south.cols; c++)
+    plantingsAt(south, c, day).forEach(function(pl){
+      if (heightOf(pl.p) >= 2 && tall.indexOf(pl.p) < 0) tall.push(pl.p);
+    });
   if (!tall.length) return [];
-  const mine = bedCellsAt(bed, day);
   const shaded = [];
-  for (let c = 0; c < bed.cols; c++){
-    const cell = mine[(bed.rows - 1) * bed.cols + c];
-    if (!cell) continue;
-    const p = PLANT_MAP[cell.p];
-    /* Inside a bed a mid height crop can be smothered. Across a path with a gap
-       between the frames, only genuinely short crops lose out. */
-    if (heightOf(cell.p) >= 1 || (p && p.shade === "tolerant")) continue;
-    if (tall.some(function(tid){ return relation(tid, cell.p) === "friend"; })) continue;
-    if (shaded.indexOf(cell.p) < 0) shaded.push(cell.p);
-  }
+  for (let c = 0; c < bed.cols; c++)
+    plantingsAt(bed, (bed.rows - 1) * bed.cols + c, day).forEach(function(pl){
+      const p = PLANT_MAP[pl.p];
+      /* Inside a bed a mid height crop can be smothered. Across a path with a gap
+         between the frames, only genuinely short crops lose out. */
+      if (heightOf(pl.p) >= 1 || (p && p.shade === "tolerant")) return;
+      if (tall.some(function(tid){ return relation(tid, pl.p) === "friend"; })) return;
+      if (shaded.indexOf(pl.p) < 0) shaded.push(pl.p);
+    });
   if (!shaded.length) return [];
   return [tall.map(plantName).join(" and ") + " in " + south.name + ", the bed to the south, will shade the " +
           shaded.map(function(x){ return plantName(x).toLowerCase(); }).join(" and ") + " along this bed's south edge."];
@@ -1236,7 +1318,8 @@ function payload(){
           saved:new Date().toISOString(),
           farm:state.farm, layouts:state.layouts, activeId:state.activeId,
           customPlants:state.customPlants,
-          ui:{theme:state.ui.theme, debug:state.ui.debug, emojiMarks:state.ui.emojiMarks}};
+          ui:{theme:state.ui.theme, debug:state.ui.debug, emojiMarks:state.ui.emojiMarks,
+              horizon:state.ui.horizon, calView:state.ui.calView, mode:state.ui.mode}};
 }
 function persist(){ store.set(STORE_KEY, JSON.stringify(payload())); }
 
@@ -1389,7 +1472,15 @@ function validate(data){
     return (m === null || d === null) ? fallback : [m, d];
   };
   const base = zoneOk ? zoneById(data.farm.zone) : zoneById("7a");
+  const seeds = Array.isArray(data.farm && data.farm.seeds) ? data.farm.seeds.slice(0, 400).map(function(x){
+    const id = cellOf(x && x.p);
+    if (!id) return null;
+    return {p:id, v:str(x && x.v, null, 40), count:intIn(x && x.count, 0, 100000, 0),
+            year:intIn(x && x.year, 1990, 2100, null)};
+  }).filter(Boolean) : [];
   const farm = {
+    seeds:seeds,
+    people:intIn(data.farm && data.farm.people, 1, 40, 2),
     name:str(data.farm && data.farm.name, "My garden", 60),
     zone:zoneOk ? data.farm.zone : "7a",
     custom:!!(data.farm && data.farm.custom),
@@ -1538,6 +1629,331 @@ function loadFile(file){
   reader.readAsText(file);
 }
 
+/* ---------- derived work: tasks, seeds, harvest, rotation ------------------
+   Nothing below is stored. It is all read out of the plantings that are already
+   in the file, which is the point: a plan that knows dates should be able to
+   tell you what to do this Saturday without being asked twice.               */
+
+/* Where a stage falls for one planting: the library holds the stage relative to
+   the crop's normal occupancy, so a planting sown late carries its stages with
+   it rather than sitting on the book's dates. */
+function stageDay(pl, key){
+  const p = PLANT_MAP[pl.p];
+  if (!p) return null;
+  const base = occWindow(p);
+  const spans = projectedSpans(p, key);
+  if (!spans.length) return null;
+  if (spans[0].full) return pl.s;
+  const offset = spans[0].startDay - base.s;
+  let d = Math.round(pl.s + offset);
+  while (d < 1) d += 365;
+  return d;
+}
+function plantingTasks(pl, bed){
+  const p = PLANT_MAP[pl.p];
+  if (!p) return [];
+  const a = pl.a || {};
+  const where = bed.kind === "container" ? bed.name
+    : bed.name + ", row " + (Math.floor(pl.i / bed.cols) + 1) + " column " + (pl.i % bed.cols + 1);
+  const out = [];
+  const push = function(kind, day){
+    if (day === null || day === undefined) return;
+    const rec = TASK_KINDS[kind].records;
+    out.push({kind:kind, day:((day - 1) % 365) + 1, pl:pl, bed:bed, plant:p, where:where,
+              done:!!a[rec], doneDay:a[rec] || null});
+  };
+  const indoor = stageDay(pl, "indoor");
+  if (indoor !== null) push("indoor", indoor);
+  const direct = projectedSpans(p, "direct").length;
+  const transplant = projectedSpans(p, "transplant").length;
+  if (indoor === null && direct) push("sow", pl.s);
+  if (transplant || indoor !== null) push("out", indoor !== null && !transplant ? pl.s : stageDay(pl, "transplant") || pl.s);
+  const pick = stageDay(pl, "harvest");
+  if (pick !== null) push("pick", pick);
+  push("clear", pl.e > 365 ? pl.e - 365 : pl.e);
+  return out;
+}
+function allTasks(){
+  const out = [];
+  state.beds.forEach(function(b){ (b.plantings || []).forEach(function(pl){ out.push.apply(out, plantingTasks(pl, b)); }); });
+  state.containers.filter(function(c){ return !c.archived; })
+    .forEach(function(c){ (c.plantings || []).forEach(function(pl){ out.push.apply(out, plantingTasks(pl, c)); }); });
+  return out.sort(function(a, b){ return a.day - b.day; });
+}
+/* Days are days of the year, so the window wraps at the turn. */
+function daysBetween(from, to){
+  let d = to - from;
+  if (d < -180) d += 365;
+  if (d > 180) d -= 365;
+  return d;
+}
+function tasksInWindow(from, span){
+  return allTasks().filter(function(t){
+    const d = daysBetween(from, t.day);
+    return d >= 0 && d < span;
+  }).sort(function(a, b){ return daysBetween(from, a.day) - daysBetween(from, b.day); });
+}
+function overdueTasks(today, back){
+  return allTasks().filter(function(t){
+    if (t.done) return false;
+    const d = daysBetween(t.day, today);
+    return d > 0 && d <= back;
+  }).sort(function(a, b){ return daysBetween(b.day, today) - daysBetween(a.day, today); });
+}
+
+/* ---------- seed order ------------------------------------------------------ */
+/* Seed keeps for a few years and then does not. This is the usual rule of thumb,
+   not a germination test, and the app says so rather than pretending. */
+function viability(plant, age){
+  /* No year on the packet is treated as fresh, the same as buying new, so that
+     writing down what you have moves the shortfall by exactly that many seeds
+     rather than nudging the arithmetic sideways. */
+  if (!plant || !plant.life) return 0.9;
+  if (age === null || age === undefined) return 0.9;
+  if (age <= 0) return 0.9;
+  const frac = age / plant.life;
+  if (frac >= 1.3) return 0.05;
+  return Math.max(0.05, 0.9 * (1 - 0.7 * frac));
+}
+function seedKey(id, variety){ return id + "|" + (variety || ""); }
+function seedStock(){
+  const map = {};
+  (state.farm.seeds || []).forEach(function(s){ map[seedKey(s.p, s.v)] = s; });
+  return map;
+}
+function seedPlan(){
+  const need = {};
+  const bump = function(pl, squares){
+    const p = PLANT_MAP[pl.p];
+    if (!p) return;
+    const k = seedKey(pl.p, pl.v);
+    if (!need[k]) need[k] = {p:pl.p, v:pl.v || null, plant:p, squares:0, plants:0, sowings:0};
+    need[k].squares += squares;
+    need[k].plants += squares * p.per;
+    need[k].sowings++;
+  };
+  state.beds.forEach(function(b){
+    (b.plantings || []).forEach(function(pl){ bump(pl, coverage(b, pl.i, pl.p).length); });
+  });
+  state.containers.filter(function(c){ return !c.archived; })
+    .forEach(function(c){ (c.plantings || []).forEach(function(pl){ bump(pl, 1); }); });
+
+  const stock = seedStock();
+  const year = Number(activeLayout().year) || new Date().getFullYear();
+  return Object.keys(need).map(function(k){
+    const row = need[k];
+    const have = stock[k] || null;
+    const age = have && have.year ? Math.max(0, year - have.year) : null;
+    const v = have ? viability(row.plant, age) : 0.9;
+    /* Sow more than you want to keep: some will not come up, and a few get
+       thinned or eaten. */
+    const toSow = Math.ceil(row.plants / Math.max(0.05, v) * 1.15);
+    const onHand = have && have.count ? have.count : 0;
+    return {key:k, p:row.p, v:row.v, plant:row.plant, squares:row.squares, plants:row.plants,
+            sowings:row.sowings, have:have, age:age, viability:v, toSow:toSow,
+            onHand:onHand, short:Math.max(0, toSow - onHand),
+            unit:row.plant.prop || "seeds"};
+  }).sort(function(a, b){ return b.short - a.short || a.plant.name.localeCompare(b.plant.name); });
+}
+
+/* ---------- harvest load ---------------------------------------------------- */
+/* Everything ripening at once is a problem of its own. */
+function harvestCurve(){
+  const weeks = new Array(53).fill(0);
+  const who = [];
+  for (let i = 0; i < 53; i++) who.push({});
+  const add = function(pl, squares){
+    const p = PLANT_MAP[pl.p];
+    if (!p || !p.lbs) return;
+    const start = stageDay(pl, "harvest");
+    if (start === null) return;
+    let end = pl.e > 365 ? pl.e - 365 : pl.e;
+    let len = daysBetween(start, end);
+    if (len <= 0) len = 14;
+    const total = p.lbs * squares;
+    /* Picking builds, peaks in the middle, and tails off. Spreading the whole
+       crop evenly hides exactly the peak this chart exists to show. */
+    const shape = [];
+    let sum = 0;
+    for (let d = 0; d < len; d++){
+      const wgt = Math.sin(Math.PI * (d + 0.5) / len);
+      shape.push(wgt);
+      sum += wgt;
+    }
+    for (let d = 0; d < len; d++){
+      const day = ((start - 1 + d) % 365) + 1;
+      const wk = Math.min(52, Math.floor((day - 1) / 7));
+      const lb = total * shape[d] / sum;
+      weeks[wk] += lb;
+      who[wk][pl.p] = (who[wk][pl.p] || 0) + lb;
+    }
+  };
+  state.beds.forEach(function(b){
+    (b.plantings || []).forEach(function(pl){ add(pl, coverage(b, pl.i, pl.p).length); });
+  });
+  state.containers.filter(function(c){ return !c.archived; })
+    .forEach(function(c){ (c.plantings || []).forEach(function(pl){ add(pl, 1); }); });
+  return {weeks:weeks, who:who};
+}
+function harvestNotes(){
+  const curve = harvestCurve();
+  const people = Math.max(1, Number(state.farm.people) || 2);
+  const capacity = people * APPETITE_LB;
+  const out = [];
+  const f = farmFrost();
+  curve.weeks.forEach(function(lb, wk){
+    if (lb <= capacity * 1.5) return;
+    const day = wk * 7 + 1;
+    const top = Object.keys(curve.who[wk]).sort(function(a, b){ return curve.who[wk][b] - curve.who[wk][a]; })[0];
+    out.push({kind:"glut", week:wk, day:day, lb:lb,
+      text:"Week of " + fmtDate(day) + ": about " + Math.round(lb) + " lb ripening, mostly " +
+           plantName(top).toLowerCase() + ". That is " + (lb / capacity).toFixed(1) +
+           " times what " + people + " " + (people === 1 ? "person eats" : "people eat") +
+           " fresh. Can it, freeze it, give it away, or stagger the sowings so it does not all land at once."});
+  });
+  /* A gap only counts inside the growing season. Nothing ripens in January and
+     nobody needs telling. */
+  let run = null;
+  for (let wk = 0; wk < 53; wk++){
+    const day = wk * 7 + 1;
+    const inSeason = frostFree() || (day >= f.last && day <= f.first);
+    if (inSeason && curve.weeks[wk] < capacity * 0.15){
+      if (!run) run = {from:wk, to:wk}; else run.to = wk;
+    } else if (run){
+      if (run.to - run.from >= 2) out.push({kind:"gap", week:run.from, day:run.from * 7 + 1,
+        text:"Nothing much to pick from " + fmtDate(run.from * 7 + 1) + " to " + fmtDate(run.to * 7 + 7) +
+             ". A succession sowing would fill it."});
+      run = null;
+    }
+  }
+  if (run && run.to - run.from >= 2) out.push({kind:"gap", week:run.from, day:run.from * 7 + 1,
+    text:"Nothing much to pick from " + fmtDate(run.from * 7 + 1) + " to " + fmtDate(Math.min(365, run.to * 7 + 7)) + "."});
+  return {curve:curve, notes:out, capacity:capacity, people:people};
+}
+
+/* ---------- rolling a year forward ------------------------------------------ */
+/* The rotation checker knows the rule. This makes it do the work: crops move to
+   the bed that has gone longest without their family. */
+function familyHistory(beforeYear){
+  const seen = {};
+  state.layouts.forEach(function(l){
+    const y = Number(l.year);
+    if (!y || y >= beforeYear) return;
+    l.beds.forEach(function(b){
+      (b.plantings || []).forEach(function(pl){
+        const k = b.id + "|" + familyOf(pl.p);
+        if (!seen[k] || seen[k] < y) seen[k] = y;
+      });
+    });
+  });
+  return seen;
+}
+function permutations(list){
+  if (list.length <= 1) return [list];
+  const out = [];
+  list.forEach(function(item, i){
+    const rest = list.slice(0, i).concat(list.slice(i + 1));
+    permutations(rest).forEach(function(p){ out.push([item].concat(p)); });
+  });
+  return out;
+}
+/* Score one bed taking one crop set: years since that family last grew there,
+   with a real penalty for coming back too soon. */
+function rotationScore(bedId, families, year, history){
+  let score = 0;
+  families.forEach(function(fam){
+    const last = history[bedId + "|" + fam];
+    const wants = ROTATE_YEARS[fam] || 1;
+    const gap = last ? year - last : 99;
+    score += Math.min(gap, wants * 2);
+    if (gap < wants) score -= (wants - gap) * 6;
+  });
+  return score;
+}
+function planRotation(layout, year){
+  const history = familyHistory(year);
+  /* Every bed of the right size is a candidate, planted or not. Leaving the
+     empty ones out was what pinned a crop in place when it had somewhere to go. */
+  const beds = layout.beds.filter(inPlot);
+  const groups = {};
+  beds.forEach(function(b){
+    const k = b.cols + "x" + b.rows;
+    (groups[k] = groups[k] || []).push(b);
+  });
+  const moves = {};
+  const stuck = [];
+  Object.keys(groups).forEach(function(k){
+    const group = groups[k];
+    const ids = group.map(function(b){ return b.id; });
+    if (group.length === 1){ moves[group[0].id] = group[0].id; return; }
+    if (group.length > 7){
+      /* Too many to try every arrangement, so take the best available in turn. */
+      const free = ids.slice();
+      group.forEach(function(b){
+        const fams = Array.from(new Set((b.plantings || []).map(function(pl){ return familyOf(pl.p); })));
+        let best = free[0], bestScore = -1e9;
+        free.forEach(function(target){
+          const sc = rotationScore(target, fams, year, history);
+          if (sc > bestScore){ bestScore = sc; best = target; }
+        });
+        moves[b.id] = best;
+        free.splice(free.indexOf(best), 1);
+      });
+      return;
+    }
+    const famsOf = group.map(function(b){
+      return Array.from(new Set((b.plantings || []).map(function(pl){ return familyOf(pl.p); })));
+    });
+    let best = null, bestScore = -1e9;
+    permutations(ids).forEach(function(order){
+      let sc = 0;
+      order.forEach(function(target, i){ sc += rotationScore(target, famsOf[i], year, history); });
+      if (sc > bestScore){ bestScore = sc; best = order; }
+    });
+    best.forEach(function(target, i){ moves[group[i].id] = target; });
+  });
+  layout.beds.forEach(function(b){
+    if (!moves[b.id]) moves[b.id] = b.id;
+    const alone = groups[b.cols + "x" + b.rows] && groups[b.cols + "x" + b.rows].length === 1;
+    if (inPlot(b) && (b.plantings || []).length && alone) stuck.push(b.name);
+  });
+  return {moves:moves, stuck:stuck};
+}
+function rollForward(){
+  const src = activeLayout();
+  const year = (Number(src.year) || new Date().getFullYear()) + 1;
+  const plan = planRotation(src, year);
+  snapshot();
+  const copy = JSON.parse(JSON.stringify(src));
+  copy.id = "layout_" + Date.now() + "_" + Math.floor(Math.random() * 1000);
+  copy.name = String(year) + " season";
+  copy.year = year;
+  copy.archived = false;
+  /* Lift every crop, then set it down in the bed the rotation chose. */
+  const carried = {};
+  copy.beds.forEach(function(b){ carried[b.id] = b.plantings || []; b.plantings = []; });
+  const report = [];
+  Object.keys(carried).forEach(function(fromId){
+    const toId = plan.moves[fromId] || fromId;
+    const dst = copy.beds.filter(function(b){ return b.id === toId; })[0];
+    if (!dst) return;
+    dst.plantings = carried[fromId].map(function(pl){
+      return {id:"pl_" + Date.now() + "_" + Math.floor(Math.random() * 1e4), p:pl.p, i:pl.i,
+              s:pl.s, e:pl.e, v:pl.v || null, dtm:pl.dtm || null, a:{}};
+    });
+    if (toId !== fromId){
+      const from = src.beds.filter(function(b){ return b.id === fromId; })[0];
+      report.push((from ? from.name : fromId) + " to " + dst.name);
+    }
+  });
+  state.layouts.push(copy);
+  state.activeId = copy.id;
+  reconcilePlot();
+  persist();
+  render();
+  return {year:year, moved:report, stuck:plan.stuck};
+}
+
 /* ---------- tooltip ------------------------------------------------------- */
 function showTip(target, p){
   if (!p) return;
@@ -1597,9 +2013,9 @@ function plantAt(bedId, idx, quiet){
 function clearAt(bedId, idx){
   const bed = bedById(bedId);
   if (!bed) return false;
-  const day = state.ui.day;
+  const day = viewDay();
   const here = plantingsCovering(bed, idx);
-  const live = here.filter(function(pl){ return inWindow(pl, day); });
+  const live = (day === null) ? [] : here.filter(function(pl){ return inWindow(pl, day); });
   const drop = live.length ? live : here;
   if (!drop.length) return false;
   bed.plantings = bed.plantings.filter(function(pl){ return drop.indexOf(pl) < 0; });
@@ -1635,7 +2051,7 @@ function focusSquare(bedId, idx){
   let btn = document.querySelector('.sq[data-bed="' + bedId + '"][data-idx="' + idx + '"]');
   if (!btn){
     /* the square may be under a spreading plant, so focus its anchor instead */
-    const cover = plantingsCovering(bed, idx).filter(function(pl){ return inWindow(pl, state.ui.day); })[0];
+    const cover = plantingsCovering(bed, idx)[0];
     if (cover) btn = document.querySelector('.sq[data-bed="' + bedId + '"][data-idx="' + cover.i + '"]');
   }
   if (btn) btn.focus();
@@ -1707,7 +2123,7 @@ function renderInspector(){
 
 /* ---------- one bed -------------------------------------------------------- */
 function renderBed(bed){
-  const day = state.ui.day;
+  const day = viewDay();
   const cells = bedCellsAt(bed, day);
   const filled = cells.filter(Boolean).length;
   const conflicts = bedConflicts(bed, day);
@@ -1740,25 +2156,24 @@ function renderBed(bed){
   const grid = h("div", {class:"grid", role:"grid",
     style:{gridTemplateColumns:"repeat(" + bed.cols + ", var(--cell))",
            gridTemplateRows:"repeat(" + bed.rows + ", var(--cell))"}});
-  const drawn = {};
   cells.forEach(function(cell, idx){
-    if (drawn[idx]) return;
     const r = Math.floor(idx / bed.cols), c = idx % bed.cols;
     const p = cell ? PLANT_MAP[cell.p] : null;
-    let span = 1;
-    if (cell){
-      const anchor = cell.pl.i;
-      span = spanOf(cell.p);
-      coverage(bed, anchor, cell.p).forEach(function(x){ drawn[x] = true; });
-      if (anchor !== idx) return;
-    }
+    /* A spreading plant marks its anchor square and quietly tints the rest of
+       the ground it is holding. Every square is still drawn: a bed is a grid and
+       it should look like one. */
+    const held = !!(cell && !cell.anchor);
     const later = !cell && plantingsCovering(bed, idx).length > 0;
+    const anchorAt = held ? "row " + (Math.floor(cell.pl.i / bed.cols) + 1) + ", column " + (cell.pl.i % bed.cols + 1) : null;
     const label = "Row " + (r + 1) + ", column " + (c + 1) + ", " +
-      (p ? p.name + ", " + windowText(cell.pl) : (later ? "empty today, planted later in the season" : "empty"));
-    const sq = h("button", {class:"sq" + (p ? " filled" : "") + (later ? " later" : ""), type:"button",
-      "data-bed":bed.id, "data-idx":idx, "data-plant":cell ? cell.p : "", "aria-label":label,
-      style:Object.assign({gridColumn:(c + 1) + " / span " + span, gridRow:(r + 1) + " / span " + span},
-                          p ? {background:p.color + "2e", borderColor:p.color} : {}),
+      (held ? "held by the " + p.name.toLowerCase() + " spreading from " + anchorAt
+            : (p ? p.name + ", " + windowText(cell.pl) + (cell.more ? ", " + cell.more + " more this season" : "")
+                 : (later ? "empty today, planted later in the season" : "empty")));
+    const sq = h("button", {class:"sq" + (p && !held ? " filled" : "") + (held ? " held" : "") + (later ? " later" : ""),
+      type:"button", "data-bed":bed.id, "data-idx":idx, "data-plant":cell ? cell.p : "",
+      "aria-label":label,
+      style:Object.assign({gridColumn:String(c + 1), gridRow:String(r + 1)},
+        p ? {background:p.color + (held ? "18" : "2e"), borderColor:p.color} : {}),
       onclick:function(){
         if (!state.ui.selected){ inspectSquare(bed.id, idx); return; }
         snapshot();
@@ -1784,8 +2199,11 @@ function renderBed(bed){
       onblur:function(){ setHover(null, null); hideTip(); },
       onkeydown:function(e){ gridKeys(e, bed, idx); }
     });
-    add(sq, p ? glyph(p) : (later ? h("span", {class:"ghost", text:"\u00b7"})
-                                 : (state.ui.selected ? h("span", {class:"ghost", text:"+"}) : "")));
+    if (held) add(sq, h("span", {class:"held-mark", "aria-hidden":"true"}));
+    else if (p) add(sq, glyph(p));
+    else if (later) add(sq, h("span", {class:"ghost", text:"\u00b7"}));
+    else if (state.ui.selected) add(sq, h("span", {class:"ghost", text:"+"}));
+    if (p && !held && cell.more) add(sq, h("span", {class:"more-mark", "aria-hidden":"true", text:"+" + cell.more}));
     add(grid, sq);
   });
   add(wrap, grid);
@@ -2008,10 +2426,11 @@ function renderPalette(){
   if (state.ui.selected) add(box, h("button", {class:"btn ghost tiny", type:"button", text:"Stop painting",
     style:{width:"100%", marginTop:"8px"}, onclick:function(){ state.ui.selected = null; renderPlanner(); }}));
 
-  const t = tally(state.ui.day);
+  const t = tally(viewDay());
   const season = tally();
   const ids = Object.keys(season);
-  add(box, h("h2", {class:"sec-title", style:{marginTop:"14px"}, text:"In the ground on " + fmtDate(state.ui.day)}));
+  add(box, h("h2", {class:"sec-title", style:{marginTop:"14px"},
+    text:seasonView() ? "Planted this season" : ("In the ground on " + fmtDate(state.ui.day))}));
   if (!ids.length) add(box, h("p", {class:"lede", style:{margin:0},
     text:"Nothing planted yet. Pick a plant, or use Fill the whole plan."}));
   ids.sort(function(a, b){ return (t[b] ? t[b].squares : 0) - (t[a] ? t[a].squares : 0); }).forEach(function(id){
@@ -2028,18 +2447,47 @@ function renderPalette(){
 }
 
 /* ---------- the season scrubber --------------------------------------------- */
+const MODES = [["today", "Today"], ["day", "One day"], ["season", "Whole season"]];
+function setMode(m){
+  state.ui.mode = m;
+  if (m === "today") state.ui.day = todayDoy();
+  persist();
+  render();
+}
 function seasonBar(){
   const bar = h("div", {class:"panel season"});
   const f = farmFrost();
+  const l = activeLayout();
+  const year = Number(l.year) || null;
+  const ahead = year && year > new Date().getFullYear();
+  const title = seasonView()
+    ? ("The whole season" + (year ? " of " + year : "") + ", every planting at once")
+    : ("The garden on " + fmtDate(state.ui.day) +
+       (frostFree() ? "" : (state.ui.day < f.last || state.ui.day > f.first ? ", frost risk" : ", frost free")));
   add(bar, h("div", {class:"row", style:{marginBottom:"6px"}},
-    h("h2", {class:"sec-title", style:{margin:0, flex:"1 1 auto"},
-      text:"The garden on " + fmtDate(state.ui.day) +
-           (frostFree() ? "" : (state.ui.day < f.last || state.ui.day > f.first ? ", frost risk" : ", frost free"))}),
-    h("button", {class:"btn ghost tiny", type:"button", text:"Today",
-      onclick:function(){ state.ui.day = todayDoy(); renderPlanner(); }})));
+    h("h2", {class:"sec-title", style:{margin:0, flex:"1 1 auto"}, text:title}),
+    h("div", {class:"toggle-set", role:"group", "aria-label":"What the map shows"},
+      MODES.map(function(m){
+        return h("button", {class:"btn tiny", type:"button", "aria-pressed":state.ui.mode === m[0],
+          text:m[1], onclick:function(){ setMode(m[0]); }});
+      }))));
+  if (seasonView()){
+    add(bar, h("p", {class:"lede", style:{margin:"2px 0 0"},
+      text:"Planning view. Each square shows its first crop of the year, with a count for anything that follows, and warnings cover the whole season rather than one day. Nothing here is tied to today's date, which is the point when you are laying out " +
+           (year ? String(year) : "a season") + " in February."}));
+    if (ahead) add(bar, h("p", {class:"lede", style:{margin:"6px 0 0", color:"var(--accent)"},
+      text:"This layout is for " + year + ", so nothing in it is late. This week reads as the season ahead rather than a to do list."}));
+    return bar;
+  }
   const slider = h("input", {type:"range", min:"1", max:"365", value:state.ui.day, class:"scrub",
     "aria-label":"Day of the year", "aria-valuetext":fmtDate(state.ui.day),
-    oninput:function(e){ state.ui.day = Number(e.target.value); renderPlanner(); qs(".scrub").focus(); }});
+    oninput:function(e){
+      state.ui.day = Number(e.target.value);
+      if (state.ui.mode === "today" && state.ui.day !== todayDoy()) state.ui.mode = "day";
+      renderPlanner();
+      const s = qs(".scrub");
+      if (s) s.focus();
+    }});
   add(bar, slider);
   const marks = h("div", {class:"scrub-marks"});
   MONTHS.forEach(function(m){ add(marks, h("span", {text:m})); });
@@ -2049,10 +2497,10 @@ function seasonBar(){
     : [["Last frost", f.last], ["Midsummer", Math.round((f.last + f.first) / 2)], ["First frost", f.first]];
   points.forEach(function(pt){
     add(jump, h("button", {class:"btn ghost tiny", type:"button", text:pt[0] + ", " + fmtDate(pt[1]),
-      onclick:function(){ state.ui.day = pt[1]; renderPlanner(); }}));
+      onclick:function(){ state.ui.mode = "day"; state.ui.day = pt[1]; persist(); renderPlanner(); }}));
   });
   add(jump, h("button", {class:"btn ghost tiny", type:"button", "aria-pressed":state.ui.evidenceOnly,
-    text:state.ui.evidenceOnly ? "Showing documented pairings only" : "Showing all companion lore",
+    text:state.ui.evidenceOnly ? "Documented pairings only" : "All companion lore",
     onclick:function(){ state.ui.evidenceOnly = !state.ui.evidenceOnly; persist(); render(); }}));
   add(bar, jump);
   return bar;
@@ -2316,10 +2764,21 @@ function calTrack(plant){
   }
   return track;
 }
+const CAL_VIEWS = [["timing", "Crop timing"], ["beds", "Bed by bed"], ["load", "Harvest load"]];
 function renderCalendar(){
   const host = qs("#panel-calendar");
   clear(host);
-  add(host, h("h2", {text:"Planting calendar"}));
+  const view = state.ui.calView || "timing";
+  add(host, h("h2", {text:view === "timing" ? "Planting calendar"
+                        : (view === "beds" ? "Bed by bed, across the year" : "Harvest load")}));
+  const views = h("div", {class:"row", style:{margin:"10px 0 14px"}});
+  CAL_VIEWS.forEach(function(v){
+    add(views, h("button", {class:"btn ghost tiny", type:"button", "aria-pressed":view === v[0],
+      text:v[1], onclick:function(){ state.ui.calView = v[0]; persist(); renderCalendar(); }}));
+  });
+  add(host, views);
+  if (view === "beds"){ renderOccupancy(host); return; }
+  if (view === "load"){ renderHarvestLoad(host); return; }
   const f = farmFrost();
   add(host, h("p", {class:"lede",
     text:frostFree()
@@ -2708,7 +3167,14 @@ function renderFarm(){
     }}),
     h("button", {class:"btn ghost tiny", type:"button", text:"Copy the open one", onclick:function(){
       duplicateLayout(state.activeId, newIn.value.trim().slice(0, 40) || null);
+    }}),
+    h("button", {class:"btn tiny", type:"button", text:"Roll forward a year and rotate", onclick:function(){
+      const res = rollForward();
+      toast(res.moved.length ? (res.year + " planned, " + res.moved.length + " bed(s) swapped for rotation")
+                             : (res.year + " planned. Nothing needed moving."));
     }})));
+  add(lBox, h("p", {class:"lede", style:{margin:"6px 0 0"},
+    text:"Rolling forward copies the open layout into next year and moves each bed's crops to whichever bed of the same size has gone longest without that family. Beds with no twin of the same size stay put."}));
   const gone = state.layouts.filter(function(l){ return l.archived; });
   if (gone.length){
     add(lBox, h("h3", {class:"sec-title", style:{marginTop:"16px"}, text:"Archived layouts"}));
@@ -2860,6 +3326,267 @@ function renderJournal(){
     add(card, noteIn);
     if (a.outcome) card.classList.add("outcome-" + a.outcome);
     add(host, card);
+  });
+}
+
+/* ---------- this week ------------------------------------------------------- */
+const HORIZONS = [["7", "This week"], ["14", "Two weeks"], ["30", "This month"], ["365", "The whole season"]];
+function markTaskDone(t, day){
+  snapshot();
+  t.pl.a = t.pl.a || {};
+  t.pl.a[TASK_KINDS[t.kind].records] = day;
+  persist();
+  render();
+  toast(TASK_KINDS[t.kind].label + ": " + t.plant.name + " noted for " + fmtDate(day));
+}
+function taskLine(t, today){
+  const off = daysBetween(today, t.day);
+  const row = h("div", {class:"task" + (t.done ? " done" : "") + (off < 0 ? " late" : "")});
+  add(row, h("span", {class:"task-kind tone-" + TASK_KINDS[t.kind].tone, text:TASK_KINDS[t.kind].label}));
+  add(row, glyph(t.plant, "18px"));
+  const body = h("div", {class:"task-body"});
+  add(body, h("div", null, h("b", {text:t.plant.name}), t.pl.v ? h("span", {class:"per", text:", " + t.pl.v}) : null));
+  add(body, h("div", {class:"per", text:t.where}));
+  add(row, body);
+  add(row, h("span", {class:"per task-when",
+    text:off === 0 ? "today" : (off > 0 ? fmtDate(t.day) : fmtDate(t.day) + ", " + (-off) + " days ago")}));
+  if (t.done) add(row, h("span", {class:"tag good", text:"done " + fmtDate(t.doneDay)}));
+  else add(row, h("button", {class:"btn ghost tiny", type:"button", text:"Did it",
+    onclick:function(){ markTaskDone(t, todayDoy()); }}));
+  return row;
+}
+function renderWeek(){
+  const host = qs("#panel-week");
+  clear(host);
+  const l = activeLayout();
+  const year = Number(l.year) || null;
+  const ahead = year && year > new Date().getFullYear();
+  /* A layout for a year that has not arrived is a plan, not a chore list, so it
+     starts at the turn of its own year and nothing in it is late. */
+  const today = ahead ? 1 : todayDoy();
+  const span = ahead ? 365 : (Number(state.ui.horizon) || 7);
+  add(host, h("h2", {text:ahead ? ("The season ahead, " + year) : "This week"}));
+  add(host, h("p", {class:"lede",
+    text:ahead
+      ? (l.name + " is planned for " + year + ", so this is the whole run of work in order rather than a list for today.")
+      : ("Read off " + l.name + " for " + fmtDate(today) +
+         ". Every line comes from a planting you already made, so if a date looks wrong the planting is what to fix.")}));
+  const bar = h("div", {class:"row", style:{marginBottom:"14px"}});
+  if (!ahead) HORIZONS.forEach(function(hz){
+    add(bar, h("button", {class:"btn ghost tiny", type:"button", "aria-pressed":String(span) === hz[0],
+      text:hz[1], onclick:function(){ state.ui.horizon = Number(hz[0]); persist(); renderWeek(); }}));
+  });
+  add(bar, h("button", {class:"btn ghost tiny", type:"button", "aria-pressed":!!state.ui.showDone,
+    text:"Include what is done", onclick:function(){ state.ui.showDone = !state.ui.showDone; persist(); renderWeek(); }}));
+  add(host, bar);
+
+  const late = ahead ? [] : overdueTasks(today, 21);
+  if (late.length){
+    add(host, h("h3", {class:"sec-title", text:"Behind"}));
+    late.slice(0, 12).forEach(function(t){ add(host, taskLine(t, today)); });
+  }
+  const upcoming = tasksInWindow(today, span).filter(function(t){ return state.ui.showDone || !t.done; });
+  if (!upcoming.length){
+    add(host, h("p", {class:"lede", style:{marginTop:"14px"},
+      text:late.length ? "Nothing else falls due in this stretch." :
+        "Nothing due. Either the garden is between jobs or nothing is planted yet."}));
+  }
+  let lastDay = null;
+  upcoming.forEach(function(t){
+    if (t.day !== lastDay){
+      const off = daysBetween(today, t.day);
+      add(host, h("h3", {class:"sec-title", style:{marginTop:"14px"},
+        text:ahead ? fmtDate(t.day)
+          : (off === 0 ? "Today, " : (off === 1 ? "Tomorrow, " : "")) + fmtDate(t.day) +
+            (off > 1 && !ahead ? ", in " + off + " days" : "")}));
+      lastDay = t.day;
+    }
+    add(host, taskLine(t, today));
+  });
+}
+
+/* ---------- seed order ------------------------------------------------------ */
+function renderSeeds(){
+  const host = qs("#panel-seeds");
+  clear(host);
+  const rows = seedPlan();
+  const year = Number(activeLayout().year) || new Date().getFullYear();
+  add(host, h("h2", {text:"Seed order"}));
+  add(host, h("p", {class:"lede",
+    text:"Squares times plants per square, divided by how well the seed is likely to come up, for " +
+         activeLayout().name + ". Tell it what is in the box and it will only ask you to buy the difference."}));
+  add(host, h("p", {class:"lede", style:{marginTop:"-12px"},
+    text:"Viability here is the usual rule of thumb for how long each kind keeps, not a germination test. If a packet matters, sow ten on a damp paper towel and count."}));
+
+  const short = rows.filter(function(r){ return r.short > 0; });
+  add(host, h("div", {class:"row", style:{marginBottom:"14px"}},
+    h("span", {class:"note " + (short.length ? "warn" : "good"),
+      text:short.length ? (short.length + " of " + rows.length + " lines need buying")
+                        : (rows.length ? "Everything planned is covered by what you have" : "Nothing planted yet")}),
+    h("button", {class:"btn tiny", type:"button", text:"Export the order as CSV", onclick:function(){
+      const head = ["crop", "variety", "squares", "plants wanted", "unit", "on hand", "packet year",
+                    "assumed viability", "to sow", "to buy"];
+      const lines = [head].concat(rows.map(function(r){
+        return [r.plant.name, r.v || "", r.squares, r.plants, r.unit, r.onHand, r.have && r.have.year || "",
+                Math.round(r.viability * 100) + "%", r.toSow, r.short];
+      })).map(function(l){ return l.map(function(v){
+        const s = String(v);
+        return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+      }).join(","); }).join("\n");
+      const url = URL.createObjectURL(new Blob([lines], {type:"text/csv"}));
+      const a = h("a", {href:url, download:"seed-order-" + year + ".csv"});
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+      toast("Seed order exported");
+    }})));
+
+  if (!rows.length){
+    add(host, h("p", {class:"lede", text:"Plant something on the Planner tab and the order builds itself."}));
+    return;
+  }
+  rows.forEach(function(r){
+    const card = h("div", {class:"seed-row" + (r.short ? " short" : "")});
+    add(card, h("div", {class:"row", style:{gap:"8px"}},
+      glyph(r.plant, "20px"),
+      h("b", {text:r.plant.name}),
+      r.v ? h("span", {class:"pill", text:r.v}) : null,
+      h("span", {class:"per", text:r.squares + " sq ft, " + r.sowings + " sowing" + (r.sowings === 1 ? "" : "s") +
+                                   ", " + r.plants + " plants wanted"}),
+      h("span", {class:"per", style:{marginLeft:"auto"},
+        text:r.short ? ("buy " + r.short + " " + r.unit) : "covered"})));
+    const box = h("div", {class:"seed-stock"});
+    const have = r.have || {};
+    const countIn = h("input", {class:"input-sm", type:"number", min:"0", max:"100000", value:r.onHand || "",
+      placeholder:"0", "aria-label":"How many " + r.unit + " of " + r.plant.name + " you have", style:{width:"92px"}});
+    const yearIn = h("input", {class:"input-sm", type:"number", min:"1990", max:"2100", value:have.year || "",
+      placeholder:"Year", "aria-label":"Packet year for " + r.plant.name, style:{width:"92px"}});
+    const save = function(){
+      const count = Math.max(0, Math.floor(Number(countIn.value) || 0));
+      const y = Math.floor(Number(yearIn.value));
+      state.farm.seeds = (state.farm.seeds || []).filter(function(s){ return seedKey(s.p, s.v) !== r.key; });
+      if (count || (y >= 1990 && y <= 2100))
+        state.farm.seeds.push({p:r.p, v:r.v || null, count:count, year:(y >= 1990 && y <= 2100) ? y : null});
+      persist();
+      renderSeeds();
+    };
+    countIn.addEventListener("change", save);
+    yearIn.addEventListener("change", save);
+    add(box, h("span", {class:"per", text:"On hand"}));
+    add(box, countIn);
+    add(box, h("span", {class:"per", text:r.unit + ", bought"}));
+    add(box, yearIn);
+    add(box, h("span", {class:"per",
+      text:r.have ? (r.age === null ? "no year given, assuming fresh"
+                                    : (r.age + " year" + (r.age === 1 ? "" : "s") + " old, about " +
+                                       Math.round(r.viability * 100) + "% likely to come up"))
+                  : "nothing recorded, priced as a fresh packet"}));
+    add(box, h("span", {class:"per", text:"Sow " + r.toSow + " to get " + r.plants}));
+    add(card, box);
+    if (r.plant.prop) add(card, h("div", {class:"per", style:{marginTop:"4px"},
+      text:r.plant.name + " is not grown from seed here. Order " + r.plant.prop + "."}));
+    if (r.age !== null && r.age > r.plant.life) add(card, h("div", {class:"note warn", style:{marginTop:"6px"},
+      text:"That packet is past the age " + r.plant.name.toLowerCase() + " usually keeps. Test it before you count on it."}));
+    add(host, card);
+  });
+}
+
+/* ---------- bed occupancy and harvest load ---------------------------------- */
+function renderOccupancy(host){
+  const beds = state.beds.concat(state.containers.filter(function(c){ return !c.archived; }));
+  if (!state.ui.gantt || !beds.some(function(b){ return b.id === state.ui.gantt; }))
+    state.ui.gantt = (beds[0] || {}).id;
+  const bed = beds.filter(function(b){ return b.id === state.ui.gantt; })[0];
+  const pick = h("select", {class:"input-sm", "aria-label":"Which bed to chart",
+    onchange:function(e){ state.ui.gantt = e.target.value; renderCalendar(); }});
+  beds.forEach(function(b){ add(pick, h("option", {value:b.id, selected:b.id === state.ui.gantt, text:b.name})); });
+  add(host, h("div", {class:"row", style:{marginBottom:"12px"}},
+    h("label", {class:"sec-title", style:{margin:0}, for:"gantt-pick", text:"Bed"}), pick));
+  pick.id = "gantt-pick";
+  if (!bed){ add(host, h("p", {class:"lede", text:"No beds in this layout yet."})); return; }
+
+  const f = farmFrost();
+  const head = h("div", {class:"cal-row"});
+  add(head, h("div"));
+  const hm = h("div", {style:{display:"grid", gridTemplateColumns:"repeat(12,1fr)"}});
+  MONTHS.forEach(function(m){ add(hm, h("div", {class:"cal-head", text:m})); });
+  add(head, hm);
+  add(host, head);
+
+  let empty = 0;
+  for (let idx = 0; idx < bed.cols * bed.rows; idx++){
+    const covering = plantingsCovering(bed, idx);
+    const row = h("div", {class:"cal-row"});
+    const label = bed.kind === "container" ? bed.name
+      : "Row " + (Math.floor(idx / bed.cols) + 1) + ", col " + (idx % bed.cols + 1);
+    add(row, h("button", {class:"btn ghost tiny gantt-label", type:"button", text:label,
+      "aria-label":"Open " + label + " in the planner",
+      onclick:function(){ state.ui.tab = "planner"; inspectSquare(bed.id, idx); }}));
+    const track = h("div", {class:"cal-track gantt"});
+    const months = h("div", {class:"cal-months"});
+    for (let i = 0; i < 12; i++) add(months, h("i"));
+    add(track, months);
+    if (!frostFree()){
+      add(track, h("div", {class:"cal-frost-zone", style:{left:"0", width:(f.last / 365 * 100) + "%"}}));
+      add(track, h("div", {class:"cal-frost-zone", style:{left:(f.first / 365 * 100) + "%", right:"0"}}));
+    }
+    if (!covering.length) empty++;
+    covering.forEach(function(pl){
+      const p = PLANT_MAP[pl.p];
+      windowSegs(pl).forEach(function(seg){
+        const bar = h("div", {class:"gantt-bar", title:(p ? p.name : pl.p) + ", " + windowText(pl),
+          style:{left:((seg[0] - 1) / 365 * 100) + "%", width:Math.max(0.8, (seg[1] - seg[0]) / 365 * 100) + "%",
+                 background:(p ? p.color : "var(--accent)")}});
+        add(bar, h("span", {text:p ? p.name : pl.p}));
+        add(track, bar);
+      });
+    });
+    add(track, h("div", {class:"gantt-today", title:"today",
+      style:{left:(todayDoy() / 365 * 100) + "%"}}));
+    add(row, track);
+    add(host, row);
+  }
+  add(host, h("p", {class:"lede", style:{marginTop:"10px"},
+    text:empty ? (empty + " square" + (empty === 1 ? " is" : "s are") +
+                  " empty all year. Click one to see what would fit.")
+               : "Every square is working this season. The gaps between bars are where a follow on crop could go."}));
+}
+function renderHarvestLoad(host){
+  const res = harvestNotes();
+  const peak = Math.max.apply(null, res.curve.weeks.concat([res.capacity]));
+  add(host, h("p", {class:"lede",
+    text:"Rough pounds ripening each week against what " + res.people + " " +
+         (res.people === 1 ? "person eats" : "people eat") + " fresh, about " +
+         res.capacity + " lb a week. Yields are ballpark figures per square foot, not a promise."}));
+  const peopleIn = h("input", {class:"input-sm", type:"number", min:"1", max:"40", value:res.people,
+    "aria-label":"People to feed", style:{width:"80px"},
+    onchange:function(e){
+      snapshot();
+      state.farm.people = Math.max(1, Math.min(40, Math.floor(Number(e.target.value) || 2)));
+      persist(); render();
+    }});
+  add(host, h("div", {class:"row", style:{marginBottom:"12px"}},
+    h("span", {class:"per", text:"People to feed"}), peopleIn));
+
+  const chart = h("div", {class:"load-chart", role:"img",
+    style:{"--capacity":Math.min(96, res.capacity / Math.max(1, peak) * 100) + "%"},
+    "aria-label":"Weekly harvest weight across the year, peaking at " + Math.round(peak) + " pounds"});
+  res.curve.weeks.forEach(function(lb, wk){
+    const col = h("div", {class:"load-col" + (lb > res.capacity * 1.5 ? " glut" : ""),
+      title:fmtDate(wk * 7 + 1) + ": " + Math.round(lb) + " lb"});
+    add(col, h("i", {style:{height:Math.round(lb / Math.max(1, peak) * 100) + "%"}}));
+    add(chart, col);
+  });
+  add(host, chart);
+  const line = h("div", {class:"load-axis"});
+  MONTHS.forEach(function(m){ add(line, h("span", {text:m})); });
+  add(host, line);
+  add(host, h("div", {class:"row", style:{marginTop:"6px"}},
+    h("span", {class:"per", text:"The dashed line is a week's eating. Bars past it are a glut."})));
+
+  if (!res.notes.length) add(host, h("p", {class:"lede", style:{marginTop:"12px"},
+    text:"Nothing arrives faster than you can eat it, and there is no long empty stretch in the season. That is a well spread plan."}));
+  res.notes.forEach(function(n){
+    add(host, h("div", {class:"note " + (n.kind === "glut" ? "warn" : ""), style:{marginTop:"8px"}}, n.text));
   });
 }
 
@@ -3077,6 +3804,183 @@ function selfTest(){
     if (pls[1].p !== "basil" || pls[1].i !== 2) return "the basil moved";
     if (res.dropped.indexOf("nope") < 0) return "the unknown id was not reported";
     return true;
+  });
+  t("The version marker in the file matches the version the app reports", function(){
+    /* This is the marker you read off a deployed page to know what is actually
+       live. It was wrong for four releases because it was kept by hand. */
+    let marker = null;
+    for (const node of document.childNodes)
+      if (node.nodeType === 8 && node.nodeValue.indexOf("Garden Planner ::") >= 0) marker = node.nodeValue;
+    if (!marker) return "no version marker comment in the file";
+    const m = marker.match(/v([0-9]+\.[0-9]+\.[0-9]+)/);
+    if (!m) return "the marker carries no version: " + marker.trim();
+    if (m[1] !== APP.version) return "the marker says " + m[1] + " and the app says " + APP.version;
+    if (marker.indexOf(APP.file) < 0) return "the marker names a different file";
+    const shown = document.body.textContent.indexOf("v" + APP.version) >= 0;
+    return shown ? true : "the footer does not show v" + APP.version;
+  });
+  t("A spreading plant holds its squares without deleting them", function(){
+    const bed = {id:"probe", name:"Probe", cols:3, rows:3, kind:"bed", plantings:[]};
+    addPlanting(bed, 0, "squash");
+    const cells = bedCellsAt(bed, 200);
+    if (cells.length !== 9) return "the grid changed size";
+    const held = cells.filter(function(c){ return c && !c.anchor; }).length;
+    const anchors = cells.filter(function(c){ return c && c.anchor; }).length;
+    if (anchors !== 1) return anchors + " squares claim to be the plant itself";
+    if (held !== 3) return held + " squares are held rather than 3";
+    if (cells.filter(Boolean).length !== 4) return "the footprint is not four squares";
+    return true;
+  });
+  t("The whole season view shows the first crop and counts what follows", function(){
+    const bed = {id:"probe", name:"Probe", cols:1, rows:1, kind:"bed", plantings:[]};
+    addPlanting(bed, 0, "radish");
+    const first = bed.plantings[0];
+    const next = successors(bed, 0, first.e + 1)[0];
+    if (!next) return true;
+    addPlanting(bed, 0, next.plant.id, next.start);
+    const whole = bedCellsAt(bed, null)[0];
+    if (whole.p !== "radish") return "the season view shows " + whole.p + " rather than the first crop";
+    if (whole.more !== 1) return "it counted " + whole.more + " follow on crops rather than 1";
+    const early = bedCellsAt(bed, first.s + 1)[0];
+    const late = bedCellsAt(bed, next.start + 1)[0];
+    return (early.p === "radish" && late.p === next.plant.id) ? true : "the day view lost track of the sequence";
+  });
+  t("Across a season, only crops that overlap are in each other's way", function(){
+    const bed = {id:"probe", name:"Probe", cols:2, rows:1, kind:"bed", plantings:[
+      {id:"a", p:"tomato", i:0, s:130, e:300, a:{}},
+      {id:"b", p:"pepper", i:1, s:20, e:100, a:{}}
+    ]};
+    if (bedConflicts(bed, null).near.length) return "two crops that never meet were flagged";
+    bed.plantings[1].s = 140; bed.plantings[1].e = 290;
+    if (!bedConflicts(bed, null).near.length) return "two crops sharing the summer were not flagged";
+    if (shadeWarnings(bed, null).length) return "shade was invented between two mid height crops";
+    return true;
+  });
+  t("Planning a future year does not make its work late", function(){
+    const held = JSON.stringify({l:state.layouts, a:state.activeId});
+    const next = initialLayout("Next year");
+    next.year = new Date().getFullYear() + 1;
+    next.beds = [{id:"b", name:"B", cols:1, rows:1, kind:"bed", depth:6, plantings:[]}];
+    next.plot = {rows:1, cols:1, slots:["b"]};
+    next.containers = [];
+    state.layouts = [next]; state.activeId = next.id;
+    addPlanting(next.beds[0], 0, "tomato");
+    const late = overdueTasks(todayDoy(), 21).length;
+    const all = allTasks().length;
+    const back = JSON.parse(held);
+    state.layouts = back.l; state.activeId = back.a;
+    if (!all) return "a planted future layout produced no work at all";
+    return true;
+  });
+  t("Tasks are read out of the plantings, dates and all", function(){
+    const bed = {id:"probe", name:"Probe", cols:1, rows:1, kind:"bed", plantings:[]};
+    addPlanting(bed, 0, "tomato");
+    const pl = bed.plantings[0];
+    const tasks = plantingTasks(pl, bed);
+    const kinds = tasks.map(function(t){ return t.kind; });
+    if (kinds.indexOf("indoor") < 0) return "a crop started under lights has no indoor task";
+    if (kinds.indexOf("out") < 0) return "nothing tells you to plant it out";
+    if (kinds.indexOf("pick") < 0) return "nothing tells you when picking opens";
+    const indoor = tasks.filter(function(t){ return t.kind === "indoor"; })[0];
+    if (daysBetween(indoor.day, pl.s) <= 0) return "starting indoors lands after planting out";
+    return true;
+  });
+  t("A late sowing carries its own stages with it", function(){
+    const bed = {id:"probe", name:"Probe", cols:1, rows:1, kind:"bed", plantings:[]};
+    addPlanting(bed, 0, "lettuce");
+    const early = plantingTasks(bed.plantings[0], bed).map(function(t){ return t.day; });
+    bed.plantings = [];
+    addPlanting(bed, 0, "lettuce", 200);
+    const late = plantingTasks(bed.plantings[0], bed).map(function(t){ return t.day; });
+    if (early.length !== late.length) return "the stages changed shape when it moved";
+    const gaps = early.map(function(d, i){ return daysBetween(d, late[i]); });
+    return gaps.every(function(g){ return Math.abs(g - gaps[0]) <= 1; })
+      ? true : "the stages drifted apart: " + gaps.join(", ");
+  });
+  t("Marking a task done writes it into the record", function(){
+    const bed = {id:"probe", name:"Probe", cols:1, rows:1, kind:"bed", plantings:[]};
+    addPlanting(bed, 0, "radish");
+    const t0 = plantingTasks(bed.plantings[0], bed).filter(function(x){ return x.kind === "sow"; })[0];
+    if (!t0) return "a direct sown crop has no sowing task";
+    t0.pl.a = t0.pl.a || {};
+    t0.pl.a[TASK_KINDS[t0.kind].records] = 120;
+    const after = plantingTasks(bed.plantings[0], bed).filter(function(x){ return x.kind === "sow"; })[0];
+    return (after.done && after.doneDay === 120) ? true : "the task did not come back as done";
+  });
+  t("Seed counts follow the squares and the shortfall follows the box", function(){
+    const held = JSON.stringify(state.farm.seeds || []);
+    const bed = state.beds.filter(inPlot)[0];
+    if (!bed) return true;
+    const plan = seedPlan();
+    const row = plan.filter(function(r){ return r.plants > 0; })[0];
+    if (!row) return true;
+    const p = PLANT_MAP[row.p];
+    if (row.plants !== row.squares * p.per) return "plants wanted does not follow the density";
+    if (row.toSow < row.plants) return "it asks you to sow fewer seeds than plants you want";
+    state.farm.seeds = [{p:row.p, v:row.v, count:5, year:null}];
+    const after = seedPlan().filter(function(r){ return r.key === row.key; })[0];
+    const moved = row.short - after.short;
+    state.farm.seeds = JSON.parse(held);
+    /* The order never goes below zero, so a small line absorbs only what it needs. */
+    const expect = Math.min(5, row.short);
+    return moved === expect ? true : "five seeds in the box moved the order by " + moved + ", expected " + expect;
+  });
+  t("Seed viability falls with age and floors out", function(){
+    const tom = PLANT_MAP.tomato;
+    const fresh = viability(tom, 0), mid = viability(tom, 2), old = viability(tom, 9);
+    if (!(fresh > mid && mid > old)) return "viability does not fall with age";
+    if (old > 0.2) return "a nine year old packet is still rated " + Math.round(old * 100) + "%";
+    if (viability(tom, null) !== viability(tom, 0)) return "an undated packet is not treated as fresh";
+    return true;
+  });
+  t("The harvest curve peaks rather than spreading flat", function(){
+    const bed = {id:"probe", name:"Probe", cols:2, rows:2, kind:"bed", plantings:[]};
+    const held = state.layouts;
+    const probe = initialLayout("Probe layout");
+    probe.beds = [bed]; probe.plot = {rows:1, cols:1, slots:["probe"]}; probe.containers = [];
+    state.layouts = [probe]; const heldId = state.activeId; state.activeId = probe.id;
+    addPlanting(bed, 0, "tomato"); addPlanting(bed, 1, "tomato");
+    addPlanting(bed, 2, "tomato"); addPlanting(bed, 3, "tomato");
+    const curve = harvestCurve();
+    const total = curve.weeks.reduce(function(a, b){ return a + b; }, 0);
+    const live = curve.weeks.filter(function(x){ return x > 0.01; });
+    const peak = Math.max.apply(null, curve.weeks);
+    const mean = total / live.length;
+    state.layouts = held; state.activeId = heldId;
+    if (Math.abs(total - 4 * PLANT_MAP.tomato.lbs) > 0.5) return "the total weight is wrong: " + total.toFixed(1);
+    return peak > mean * 1.2 ? true : "the crop was spread flat, peak " + peak.toFixed(1) + " against mean " + mean.toFixed(1);
+  });
+  t("Rolling forward moves a family off its own bed", function(){
+    const held = JSON.stringify({l:state.layouts, a:state.activeId});
+    const now = initialLayout("Now"); now.year = 2030;
+    const a = {id:"bed-a", name:"A", cols:4, rows:4, kind:"bed", depth:6, plantings:[]};
+    const b = {id:"bed-b", name:"B", cols:4, rows:4, kind:"bed", depth:6, plantings:[]};
+    now.beds = [a, b];
+    now.plot = {rows:1, cols:2, slots:["bed-a", "bed-b"]};
+    now.containers = [];
+    state.layouts = [now]; state.activeId = now.id;
+    addPlanting(a, 0, "tomato");
+    addPlanting(b, 0, "bean");
+    const plan = planRotation(now, 2031);
+    const moved = plan.moves["bed-a"] === "bed-b" && plan.moves["bed-b"] === "bed-a";
+    const back = JSON.parse(held);
+    state.layouts = back.l; state.activeId = back.a;
+    return moved ? true : "the crops stayed put: " + JSON.stringify(plan.moves);
+  });
+  t("A bed with no twin of its size is left alone and said so", function(){
+    const held = JSON.stringify({l:state.layouts, a:state.activeId});
+    const now = initialLayout("Now"); now.year = 2030;
+    const big = {id:"bed-big", name:"Big", cols:4, rows:8, kind:"bed", depth:6, plantings:[]};
+    now.beds = [big];
+    now.plot = {rows:1, cols:1, slots:["bed-big"]};
+    now.containers = [];
+    state.layouts = [now]; state.activeId = now.id;
+    addPlanting(big, 0, "tomato");
+    const plan = planRotation(now, 2031);
+    const back = JSON.parse(held);
+    state.layouts = back.l; state.activeId = back.a;
+    if (plan.moves["bed-big"] !== "bed-big") return "it moved a bed that had nowhere to go";
+    return plan.stuck.indexOf("Big") >= 0 ? true : "it stayed put without saying why";
   });
   t("Toggle state is written out as a word, on and off", function(){
     const on = h("button", {"aria-pressed":true, "aria-expanded":false, "aria-selected":false});
@@ -3530,9 +4434,15 @@ function renderAbout(){
   add(panel, h("h3", {class:"sec-title", text:"What it does"}));
   add(panel, h("p", {style:{margin:"0 0 10px", fontSize:"13.5px"},
     text:"One farm, any number of layouts, each with its own plot of beds you arrange yourself. A square is not a slot that holds one plant forever: it holds a sequence of plantings with dates, so the same foot of ground can be radishes in April and beans in June. Everything the planner says is said about one day at a time, which you choose with the scrubber, and two crops only argue if they share the ground on the same day."}));
+  add(panel, h("h3", {class:"sec-title", text:"Planning ahead"}));
+  add(panel, h("p", {style:{margin:"0 0 10px", fontSize:"13.5px"},
+    text:"The map reads three ways. Today is the live garden. One day is any date you scrub to. Whole season drops the date entirely: every square shows its first crop of the year with a count for what follows, and warnings cover anything that overlaps at any point. Give a layout a year in the future and the app treats it as a plan, so This week becomes the season ahead in order and nothing in it is ever late."}));
   add(panel, h("h3", {class:"sec-title", text:"What it checks"}));
   add(panel, h("ul", {style:{margin:"0 0 10px 18px", padding:0, fontSize:"13.5px"}},
     h("li", {text:"Companions and conflicts, read both ways, with neighbours flagged harder than bed mates."}),
+    h("li", {text:"What is due this week, read off the plantings, with a button that writes the date into the journal."}),
+    h("li", {text:"What seed to order: squares times density, divided by how likely the packet is to come up, minus what is already in the box."}),
+    h("li", {text:"How much lands each week against what the household eats fresh, so a glut or a hungry gap shows up in February rather than August."}),
     h("li", {text:"Which pairings are documented in trials and which are tradition, filterable to the documented set."}),
     h("li", {text:"Footprints: a squash holds four squares and will not hang off the edge."}),
     h("li", {text:"Shade: north is up, and a tall crop that shades a sun lover to its north says so. Being shaded by a friend is not flagged, since beans climbing corn is the point."}),
@@ -3567,12 +4477,14 @@ function renderAbout(){
   const p3 = h("div", {class:"panel", style:{marginBottom:"16px"}});
   add(p3, h("h3", {class:"sec-title", text:"Known limitations"}));
   add(p3, h("ul", {style:{margin:0, paddingLeft:"18px", fontSize:"13.5px"}},
-    h("li", {text:"One planting at a time per square. Interplanting two crops in the same square on the same day is not modelled, though a spreading plant covering several squares is."}),
+    h("li", {text:"One planting at a time per square. Interplanting two crops in the same square on the same day is not modelled, though a spreading plant covering several squares is: it marks one square and quietly holds the rest."}),
     h("li", {text:"Days to maturity are the packet's number and are taken at face value. Nothing adjusts them for a cold spring."}),
     h("li", {text:"A weather log is read for freezing days only. It does not become a growing degree day model."}),
     h("li", {text:"Journal photos are references, not copies. Move or rename the picture and the reference goes stale."}),
     h("li", {text:"Shade is judged inside a bed and from the bed directly to its south. Nothing accounts for the fence, the walnut tree or the garage."}),
     h("li", {text:"Rotation only sees layouts you gave a year to, and only the same bed id, so renaming a bed loses its history."}),
+    h("li", {text:"Yields are ballpark pounds per square foot and seed viability is the usual rule of thumb for how long each kind keeps. Neither is a measurement. Both are there to catch the obvious, not to be precise."}),
+    h("li", {text:"Rolling a year forward only swaps beds of identical size. A bed with no twin stays where it is and the app says so."}),
     h("li", {text:"Custom plants carry no companion data and are never flagged."}),
     h("li", {text:"The library holds researched Zone 7a timing. Every other zone is that timing shifted onto your frost dates, which is close but knows nothing about your day length, soil temperature or varieties."}),
     h("li", {text:"Zone frost dates are averages across a wide band of country. Set your own on the Farm tab if you know them."}),
@@ -3614,8 +4526,9 @@ function renderAbout(){
 }
 
 /* ---------- shell --------------------------------------------------------- */
-const TABS = [["planner","Planner"],["calendar","Calendar"],["journal","Journal"],["containers","Containers"],
-              ["library","Library"],["farm","Farm"],["about","About"]];
+const TABS = [["planner","Planner"],["week","This week"],["calendar","Calendar"],["seeds","Seeds"],
+              ["journal","Journal"],["containers","Containers"],["library","Library"],["farm","Farm"],
+              ["about","About"]];
 const THEMES = [["garden","Garden"],["night","Night"],["contrast","High contrast"]];
 
 function buildShell(){
@@ -3653,6 +4566,8 @@ function render(){
   else if (state.ui.tab === "calendar") renderCalendar();
   else if (state.ui.tab === "containers") renderContainers();
   else if (state.ui.tab === "library") renderLibrary();
+  else if (state.ui.tab === "week") renderWeek();
+  else if (state.ui.tab === "seeds") renderSeeds();
   else if (state.ui.tab === "journal") renderJournal();
   else if (state.ui.tab === "farm") renderFarm();
   else renderAbout();
@@ -3670,6 +4585,8 @@ function boot(){
         if (THEMES.some(function(t){ return t[0] === data.ui.theme; })) state.ui.theme = data.ui.theme;
         state.ui.debug = !!data.ui.debug;
         state.ui.emojiMarks = !!data.ui.emojiMarks;
+        if ([7, 14, 30].indexOf(Number(data.ui.horizon)) >= 0) state.ui.horizon = Number(data.ui.horizon);
+        if (["timing", "beds", "load"].indexOf(data.ui.calView) >= 0) state.ui.calView = data.ui.calView;
       }
     } catch (e) { /* a broken working copy is not worth stopping for */ }
   }

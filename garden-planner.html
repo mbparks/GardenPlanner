@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Garden Planner :: garden-planner.html :: v2.6.3 -->
+<!-- Garden Planner :: garden-planner.html :: v2.7.0 -->
 <html lang="en" data-theme="garden">
 <head>
 <meta charset="utf-8">
@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600&family=DM+Sans:wght@300;400;500&display=swap">
 <style>
-/* Garden Planner v2.6.3. Fonts are additive only: the local stacks below carry the
+/* Garden Planner v2.7.0. Fonts are additive only: the local stacks below carry the
    design if the remote sheet never loads (offline, file:// use). */
 :root{
   --font-display:"Lora","Iowan Old Style",Georgia,"Times New Roman",serif;
@@ -275,6 +275,21 @@ main{max-width:1180px;margin:0 auto;padding:20px 16px 60px}
   padding:11px 18px;border-radius:9px;font-size:13px;box-shadow:0 4px 16px rgba(0,0,0,.3);max-width:90vw}
 :root[data-theme="contrast"] .toast{border:2px solid #fff}
 .hidden{display:none!important}
+/* Life in the background. Behind everything, deaf to the mouse, absent from the
+   accessibility tree, and gone entirely when motion is unwelcome or the paper
+   is going through a printer. */
+#ambience{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;contain:strict}
+#ambience .critter{position:absolute;top:0;left:0;display:block;will-change:transform;
+  transform:translate3d(-100px,-100px,0)}
+#ambience .critter .wing{transform-origin:12px 12px;animation:flap 320ms ease-in-out infinite alternate}
+#ambience .butterfly .wing{animation-duration:520ms}
+#ambience .bird .wing{animation-duration:420ms}
+#ambience .dragonfly .wing{animation-duration:170ms}
+#ambience .firefly{filter:blur(.2px)}
+@keyframes flap{from{transform:scaleY(1)}to{transform:scaleY(.35)}}
+.topbar,main,#tooltip,#toast{position:relative;z-index:1}
+@media (prefers-reduced-motion:reduce){#ambience{display:none}}
+@media print{#ambience{display:none!important}}
 
 /* season scrubber */
 .season{margin-bottom:12px}
@@ -384,8 +399,8 @@ textarea.input-sm{font-size:13px;line-height:1.4}
 <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
 <script>
 "use strict";
-/* Garden Planner v2.6.3. Single file, no build step, no server, GPL-3.0. */
-const APP = { name: "Garden Planner", file: "garden-planner.html", version: "2.6.3", schema: 6 };
+/* Garden Planner v2.7.0. Single file, no build step, no server, GPL-3.0. */
+const APP = { name: "Garden Planner", file: "garden-planner.html", version: "2.7.0", schema: 6 };
 
 /* ---------- plant library -------------------------------------------------
    per   = plants per square foot (Square Foot Gardening densities)
@@ -819,7 +834,7 @@ const state = {
   ui: {tab:"planner", theme:"garden", selected:null, filterType:"all", search:"",
        calMine:false, debug:false, hover:null, testResults:null, editing:null, dragging:null,
        day:todayDoy(), inspect:null, evidenceOnly:false, painting:false, journalFilter:"all",
-       emojiMarks:false, mode:"today", open:{}, horizon:7, showDone:false, calView:"timing", gantt:null}
+       emojiMarks:false, ambience:true, mode:"today", open:{}, horizon:7, showDone:false, calView:"timing", gantt:null}
 };
 state.activeId = state.layouts[0].id;
 
@@ -1433,6 +1448,7 @@ function payload(){
           farm:state.farm, layouts:state.layouts, activeId:state.activeId,
           customPlants:state.customPlants,
           ui:{theme:state.ui.theme, debug:state.ui.debug, emojiMarks:state.ui.emojiMarks,
+              ambience:state.ui.ambience,
               horizon:state.ui.horizon, calView:state.ui.calView, mode:state.ui.mode}};
 }
 function persist(){ store.set(STORE_KEY, JSON.stringify(payload())); }
@@ -3142,6 +3158,16 @@ function renderFarm(){
         "Emoji", sample(true))),
     h("span", {class:"lede", style:{margin:0},
       text:"The drawn marks are in this file and look the same everywhere. Emoji come from your system, and Unicode has no character at all for a squash."})));
+  add(idBox, h("h3", {class:"sec-title", style:{marginTop:"14px"}, text:"Life in the background"}));
+  add(idBox, h("div", {class:"row"},
+    segmented([["on", "On"], ["off", "Off"]], state.ui.ambience === false ? "off" : "on",
+      function(v){
+        state.ui.ambience = (v === "on");
+        persist(); render();
+        toast(state.ui.ambience ? "Something is moving out there" : "The garden is still");
+      }, "Background life"),
+    h("span", {class:"lede", style:{margin:0},
+      text:"Birds, bees and butterflies drift behind the light themes, lightning bugs behind the dark one. They sit under everything, ignore the mouse, and stay away entirely in high contrast, when your system asks for reduced motion, and on anything you print."})));
   add(host, idBox);
 
   /* zone */
@@ -3676,6 +3702,151 @@ function renderHarvestLoad(host){
   });
 }
 
+/* ---------- life in the background -----------------------------------------
+   Small drawn creatures drifting behind the app. Inline SVG like the plant
+   marks, so nothing is fetched and nothing is shipped alongside the file.
+   Rules it keeps to: never above the content, never in the way of a click,
+   never in the accessibility tree, nothing at all when the reader has asked for
+   reduced motion, and nothing in the high contrast theme where anything moving
+   behind text is a liability. Original work, GPL-3.0 with the rest.          */
+const AMBIENT_FORMS = {
+  bird:[["path",{d:"M2 13c4-.6 7-2.4 9.4-5.4 1.2 2.6 3.4 4 6.6 4.2-2 2.6-4.8 4-8.4 4.2-3 .2-5.6-.8-7.6-3z",
+                 fill:"currentColor"}],
+        ["path",{class:"wing", d:"M11 8.4c1.2-3 3-4.8 5.4-5.4-.4 3-1.6 5-3.6 6.2z", fill:"currentColor", opacity:".75"}],
+        ["path",{d:"M18 11.8 22 11l-3.4 2z", fill:"currentColor", opacity:".8"}]],
+  butterfly:[["path",{class:"wing", d:"M12 12C9.4 6.6 6.6 4 3.6 4.4c-1.6.2-2.2 2-1.4 4 1 2.6 4.2 4.2 9.8 3.6z", fill:"currentColor"}],
+             ["path",{class:"wing", d:"M12 12c2.6-5.4 5.4-8 8.4-7.6 1.6.2 2.2 2 1.4 4-1 2.6-4.2 4.2-9.8 3.6z", fill:"currentColor"}],
+             ["path",{class:"wing", d:"M12 12c-2 3.8-4 5.8-6.2 6-1.2.2-1.8-.8-1.4-2.2.6-2 3.2-3.6 7.6-3.8z", fill:"currentColor", opacity:".8"}],
+             ["path",{class:"wing", d:"M12 12c2 3.8 4 5.8 6.2 6 1.2.2 1.8-.8 1.4-2.2-.6-2-3.2-3.6-7.6-3.8z", fill:"currentColor", opacity:".8"}],
+             ["path",{d:"M12 6.6c.7 0 1.1.8 1.1 2.6v6c0 1.8-.4 2.6-1.1 2.6s-1.1-.8-1.1-2.6v-6c0-1.8.4-2.6 1.1-2.6z", fill:"currentColor"}]],
+  bee:[["ellipse",{cx:"13",cy:"13",rx:"6",ry:"4.4",fill:"currentColor"}],
+       ["path",{d:"M11 9.2c.6 2.4.6 5 0 7.6M14.4 9.4c.7 2.3.7 4.8 0 7.2", stroke:"var(--bg)", "stroke-width":"1.4", fill:"none"}],
+       ["path",{class:"wing", d:"M11.6 9.2C10 5.6 8 3.8 5.6 4.2c-1 .2-1.2 1.6-.4 3 .9 1.5 3 2.4 6.4 2z", fill:"currentColor", opacity:".45"}],
+       ["path",{class:"wing", d:"M13 9c1.4-3.2 3.2-4.8 5.4-4.4.9.2 1.1 1.4.4 2.6-.8 1.4-2.6 2.2-5.8 1.8z", fill:"currentColor", opacity:".45"}]],
+  dragonfly:[["path",{d:"M12 4.4c.8 0 1.3 1 1.3 3v13c0 1.4-.5 2.2-1.3 2.2s-1.3-.8-1.3-2.2v-13c0-2 .5-3 1.3-3z", fill:"currentColor"}],
+             ["circle",{cx:"12",cy:"4.6",r:"2.2",fill:"currentColor"}],
+             ["path",{class:"wing", d:"M11 9c-3.4-2-6.4-2.6-9-1.6 2 2.2 5 3 9 2.6zM13 9c3.4-2 6.4-2.6 9-1.6-2 2.2-5 3-9 2.6z", fill:"currentColor", opacity:".4"}],
+             ["path",{class:"wing", d:"M11 12c-3-1.6-5.6-2-7.8-1.2 1.7 1.9 4.3 2.6 7.8 2.2zM13 12c3-1.6 5.6-2 7.8-1.2-1.7 1.9-4.3 2.6-7.8 2.2z", fill:"currentColor", opacity:".3"}]],
+  firefly:[["circle",{cx:"12",cy:"12",r:"9",fill:"currentColor",opacity:".16"}],
+           ["circle",{cx:"12",cy:"12",r:"4.6",fill:"currentColor",opacity:".38"}],
+           ["circle",{cx:"12",cy:"12",r:"2",fill:"currentColor"}]]
+};
+/* Day flyers and their colours, drawn from the theme so they belong to it. */
+const DAY_KINDS = [
+  {kind:"bird", color:"var(--muted)", size:26, speed:[26, 46]},
+  {kind:"bird", color:"var(--accent)", size:20, speed:[30, 52]},
+  {kind:"butterfly", color:"var(--harvest)", size:22, speed:[14, 26]},
+  {kind:"butterfly", color:"var(--terracotta)", size:18, speed:[12, 24]},
+  {kind:"bee", color:"var(--harvest)", size:15, speed:[18, 34]},
+  {kind:"dragonfly", color:"var(--indoor)", size:22, speed:[22, 40]}
+];
+const ambience = {
+  layer:null, items:[], raf:null, last:0, night:false,
+
+  wanted:function(){
+    if (state.ui.ambience === false) return false;
+    if (state.ui.theme === "contrast") return false;
+    try {
+      if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return false;
+    } catch (e) { /* no matchMedia is not a reason to refuse */ }
+    return true;
+  },
+  sprite:function(kind, color, size){
+    const svg = svgEl("svg", {viewBox:"0 0 24 24", class:"critter " + kind, focusable:"false", "aria-hidden":"true"});
+    svg.style.color = color;
+    svg.style.width = size + "px";
+    svg.style.height = size + "px";
+    AMBIENT_FORMS[kind].forEach(function(spec){ svg.appendChild(svgEl(spec[0], spec[1], spec[2])); });
+    return svg;
+  },
+  make:function(){
+    const w = window.innerWidth || 1000, hgt = window.innerHeight || 800;
+    const area = w * hgt;
+    this.items = [];
+    if (this.night){
+      const n = Math.max(6, Math.min(16, Math.round(area / 90000)));
+      for (let i = 0; i < n; i++){
+        const size = 10 + Math.random() * 8;
+        const el = this.sprite("firefly", "var(--harvest)", size);
+        this.items.push({el:el, x:Math.random() * w, y:Math.random() * hgt,
+          vx:(Math.random() - 0.5) * 12, vy:(Math.random() - 0.5) * 10,
+          phase:Math.random() * Math.PI * 2, blink:2.6 + Math.random() * 3.4, glow:0});
+        this.layer.appendChild(el);
+      }
+      return;
+    }
+    const n = Math.max(3, Math.min(7, Math.round(area / 240000)));
+    for (let i = 0; i < n; i++){
+      const spec = DAY_KINDS[Math.floor(Math.random() * DAY_KINDS.length)];
+      const el = this.sprite(spec.kind, spec.color, spec.size);
+      const speed = spec.speed[0] + Math.random() * (spec.speed[1] - spec.speed[0]);
+      const dir = Math.random() < 0.5 ? -1 : 1;
+      this.items.push({el:el, x:Math.random() * w, y:40 + Math.random() * (hgt - 80),
+        vx:speed * dir, vy:(Math.random() - 0.5) * 10,
+        phase:Math.random() * Math.PI * 2, bob:6 + Math.random() * 10,
+        wander:0.25 + Math.random() * 0.5, dir:dir});
+      this.layer.appendChild(el);
+    }
+  },
+  start:function(){
+    this.stop();
+    if (!this.wanted()) return;
+    this.night = state.ui.theme === "night";
+    this.layer = h("div", {id:"ambience", "aria-hidden":"true"});
+    document.body.appendChild(this.layer);
+    this.make();
+    const self = this;
+    this.last = 0;
+    this.raf = requestAnimationFrame(function(ts){ self.tick(ts); });
+  },
+  stop:function(){
+    if (this.raf) cancelAnimationFrame(this.raf);
+    this.raf = null;
+    if (this.layer && this.layer.parentNode) this.layer.parentNode.removeChild(this.layer);
+    this.layer = null;
+    this.items = [];
+  },
+  tick:function(ts){
+    const self = this;
+    if (!this.layer) return;
+    if (!this.last) this.last = ts;
+    /* A long gap means the tab was in the background. Skip it rather than
+       teleporting everything across the screen. */
+    const dt = Math.min(0.05, (ts - this.last) / 1000);
+    this.last = ts;
+    const w = window.innerWidth || 1000, hgt = window.innerHeight || 800;
+    this.items.forEach(function(it){
+      it.phase += dt;
+      if (self.night){
+        /* Fireflies drift and turn slowly, and blink on their own clock. */
+        it.vx += (Math.random() - 0.5) * 6 * dt;
+        it.vy += (Math.random() - 0.5) * 6 * dt;
+        const cap = 14;
+        it.vx = Math.max(-cap, Math.min(cap, it.vx));
+        it.vy = Math.max(-cap, Math.min(cap, it.vy));
+        const cycle = (it.phase % it.blink) / it.blink;
+        /* Dark for most of the cycle, then a short warm flare. */
+        it.glow = cycle < 0.18 ? Math.sin(cycle / 0.18 * Math.PI) : 0.04;
+        it.el.style.opacity = (0.05 + it.glow * 0.85).toFixed(3);
+      } else {
+        it.vy += Math.sin(it.phase * 1.7) * it.wander * dt * 30;
+        it.vy = Math.max(-22, Math.min(22, it.vy));
+        it.el.style.opacity = "0.5";
+      }
+      it.x += it.vx * dt;
+      it.y += it.vy * dt + (self.night ? 0 : Math.sin(it.phase * 2.4) * it.bob * dt);
+      const pad = 60;
+      if (it.x < -pad) it.x = w + pad;
+      if (it.x > w + pad) it.x = -pad;
+      if (it.y < -pad) it.y = hgt + pad;
+      if (it.y > hgt + pad) it.y = -pad;
+      const flip = (!self.night && it.vx < 0) ? " scaleX(-1)" : "";
+      it.el.style.transform = "translate3d(" + it.x.toFixed(1) + "px," + it.y.toFixed(1) + "px,0)" + flip;
+    });
+    this.raf = requestAnimationFrame(function(next){ self.tick(next); });
+  }
+};
+
 /* ---------- about, self test, housekeeping -------------------------------- */
 /* Point this at the repo once it exists. It is the only outbound link in the app. */
 const REPO_URL = "https://github.com/mbparks";
@@ -3927,6 +4098,35 @@ function selfTest(){
       return o && o < 0.6;
     }).length;
     return faded ? faded + " rows are faded below six tenths" : true;
+  });
+  t("The background life stays in the background", function(){
+    const layer = document.getElementById("ambience");
+    if (!ambience.wanted()){
+      return layer ? "there are creatures about when there should not be" : true;
+    }
+    if (!layer) return "the layer is missing";
+    const cs = getComputedStyle(layer);
+    if (cs.pointerEvents !== "none") return "it would catch a click meant for the app";
+    if (layer.getAttribute("aria-hidden") !== "true") return "it is in the accessibility tree";
+    if (layer.querySelectorAll("button, a, input").length) return "it holds something focusable";
+    if (Number(cs.zIndex) >= 1) return "it is not sitting behind the content";
+    const wrong = Array.prototype.filter.call(layer.querySelectorAll(".critter"), function(c){
+      const kind = (c.getAttribute("class") || "").split(" ")[1];
+      return state.ui.theme === "night" ? kind !== "firefly" : kind === "firefly";
+    }).length;
+    return wrong ? wrong + " creatures belong to the other theme" : true;
+  });
+  t("Nothing flies about where it would be unwelcome", function(){
+    const held = {theme:state.ui.theme, on:state.ui.ambience};
+    state.ui.theme = "contrast";
+    const contrastWanted = ambience.wanted();
+    state.ui.theme = held.theme;
+    state.ui.ambience = false;
+    const offWanted = ambience.wanted();
+    state.ui.ambience = held.on;
+    if (contrastWanted) return "high contrast would still get moving creatures";
+    if (offWanted) return "turning it off does not turn it off";
+    return true;
   });
   t("A segmented bar never wraps, and wrapping choices use pills", function(){
     /* A segmented control is one row by definition. Five plant filters in a
@@ -4674,6 +4874,7 @@ function renderAbout(){
     h("li", {text:"License: GPL-3.0"}),
     h("li", {text:"No third party libraries. Plain HTML, CSS and JavaScript."}),
     h("li", {text:"Type: Lora and DM Sans from Google Fonts when the network is there, local serif and sans stacks when it is not. The layout does not depend on either."}),
+    h("li", {text:"The birds, bees, butterflies and lightning bugs drifting behind the app are drawn here too, from the same kind of markup. They are decoration and nothing else: they sit under the content, ignore the mouse, are hidden from screen readers, and do not appear in the high contrast theme, on a printed page, or when your system asks for reduced motion. There is a switch on the Farm tab."}),
     h("li", {text:"Plant marks are drawn here as inline SVG, original work under the same license, about 4 kB of markup and no external files. Unicode has no character for a squash, only a carved jack-o-lantern, which is why the emoji set is a switch on the Farm tab rather than the default."}),
     h("li", {text:"Square foot densities follow the published SFG spacings. Companion pairings are folk practice plus extension service guidance, not laboratory results."})));
   const links = h("div", {class:"row"});
@@ -4760,6 +4961,7 @@ function buildShell(){
 }
 function applyTheme(){
   document.documentElement.setAttribute("data-theme", state.ui.theme);
+  ambience.start();
   const label = THEMES.filter(function(t){ return t[0] === state.ui.theme; })[0];
   qs("#btn-theme").textContent = "Theme: " + (label ? label[1] : "Garden");
 }
@@ -4794,6 +4996,7 @@ function boot(){
         if (THEMES.some(function(t){ return t[0] === data.ui.theme; })) state.ui.theme = data.ui.theme;
         state.ui.debug = !!data.ui.debug;
         state.ui.emojiMarks = !!data.ui.emojiMarks;
+        if (data.ui.ambience !== undefined) state.ui.ambience = !!data.ui.ambience;
         if ([7, 14, 30].indexOf(Number(data.ui.horizon)) >= 0) state.ui.horizon = Number(data.ui.horizon);
         if (["timing", "beds", "load"].indexOf(data.ui.calView) >= 0) state.ui.calView = data.ui.calView;
       }
@@ -4838,6 +5041,15 @@ function boot(){
   });
   installPwaLayer();
   window.addEventListener("scroll", hideTip, {passive:true});
+  /* Nothing should be flying about in a tab nobody is looking at. */
+  document.addEventListener("visibilitychange", function(){
+    if (document.hidden) ambience.stop(); else ambience.start();
+  });
+  let resizeTimer = null;
+  window.addEventListener("resize", function(){
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(function(){ ambience.start(); }, 400);
+  });
   render();
   log("booted", APP.version);
 }

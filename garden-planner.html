@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Garden Planner :: garden-planner.html :: v2.5.1 -->
+<!-- Garden Planner :: garden-planner.html :: v2.6.0 -->
 <html lang="en" data-theme="garden">
 <head>
 <meta charset="utf-8">
@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600&family=DM+Sans:wght@300;400;500&display=swap">
 <style>
-/* Garden Planner v2.5.1. Fonts are additive only: the local stacks below carry the
+/* Garden Planner v2.6.0. Fonts are additive only: the local stacks below carry the
    design if the remote sheet never loads (offline, file:// use). */
 :root{
   --font-display:"Lora","Iowan Old Style",Georgia,"Times New Roman",serif;
@@ -84,13 +84,28 @@ button,input,select,textarea{font-family:inherit; font-size:14px; color:inherit}
   padding:8px 12px;font-size:12px;cursor:pointer;min-height:36px}
 .hdr-btn:hover{background:var(--accent-soft);color:var(--accent-ink)}
 .hdr-btn.solid{background:var(--accent-soft);color:var(--accent-ink)}
-.tabs{display:flex;gap:2px;flex-wrap:wrap}
+.tabs{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.tabs::-webkit-scrollbar{display:none}
+.tab-btn{white-space:nowrap}
 .tab-btn{background:none;border:none;cursor:pointer;font-size:13px;font-weight:500;padding:11px 16px;
   color:var(--header-dim);border-bottom:3px solid transparent;min-height:var(--tap)}
 .tab-btn[aria-selected="true"]{color:var(--header-ink);border-bottom-color:var(--header-dim)}
 .tab-btn:hover{color:var(--header-ink)}
 
 main{max-width:1180px;margin:0 auto;padding:20px 16px 60px}
+.tab-body{margin-top:14px}
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px;
+  padding:8px 10px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius)}
+.toolbar-gap{flex:1 1 auto}
+.toolbar-count{white-space:nowrap}
+.disclosure{margin-top:10px}
+.disclosure-toggle::after{content:"\25be";margin-left:8px;display:inline-block}
+.disclosure.open .disclosure-toggle::after{transform:rotate(180deg)}
+.disclosure-body{margin-top:10px;padding:12px;background:var(--panel-2);
+  border:1px solid var(--line);border-radius:var(--radius)}
+.date-field{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.date-label{min-width:78px}
+.palette-hint{font-size:12px}
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px;box-shadow:var(--shadow)}
 .sec-title{font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
 .lede{font-size:13px;color:var(--muted);margin:4px 0 18px}
@@ -121,7 +136,8 @@ main{max-width:1180px;margin:0 auto;padding:20px 16px 60px}
 .chip .per{font-size:10px;color:var(--muted)}
 .chip[aria-pressed="true"]{border-color:var(--ink);box-shadow:0 2px 8px rgba(0,0,0,.18)}
 .chip .swatch{width:10px;height:10px;border-radius:50%;border:1px solid var(--line);flex:none}
-.filters{display:flex;gap:4px;flex-wrap:wrap;margin:8px 0 10px}
+.filters{margin:8px 0 8px}
+.filters .toggle-set{flex-wrap:wrap}
 /* Any toggle in the app reads the same way when it is on: filled, not merely
    tinted, with a tick so it does not rest on colour alone. */
 .btn[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
@@ -130,7 +146,7 @@ main{max-width:1180px;margin:0 auto;padding:20px 16px 60px}
 .btn.tiny[aria-pressed="true"]::before{margin-right:4px}
 :root[data-theme="contrast"] .btn[aria-pressed="true"]{outline:2px solid var(--ink);outline-offset:-4px}
 .toggle-set{display:inline-flex;gap:0;border:1px solid var(--line-strong);border-radius:8px;overflow:hidden}
-.toggle-set .btn{border-radius:0;border:none;border-right:1px solid var(--line-strong);min-height:40px}
+.toggle-set .btn{border-radius:0;border:none;border-right:1px solid var(--line-strong);min-height:38px}
 .toggle-set .btn:last-child{border-right:none}
 .toggle-set .btn[aria-pressed="false"]{background:var(--panel);color:var(--muted)}
 .mark-sample{display:inline-flex;align-items:center;gap:6px}
@@ -188,8 +204,12 @@ main{max-width:1180px;margin:0 auto;padding:20px 16px 60px}
 .sq.foe{background:var(--bad-bg)!important;border-color:var(--bad-line);box-shadow:inset 0 0 0 1px var(--bad-line)}
 .sq.here{outline:2px solid var(--terracotta);outline-offset:1px}
 .sq .ghost{opacity:.28;font-size:calc(var(--cell) * .4)}
+.bed{position:relative}
+.bed-edit{position:absolute;top:8px;right:8px;min-height:28px;padding:3px 9px;font-size:11px;opacity:.45}
+.bed:hover .bed-edit,.bed:focus-within .bed-edit,.bed-edit:focus-visible{opacity:1}
+@media (pointer:coarse){.bed-edit{opacity:1}}
+.bed-head{padding-right:52px}
 .bed-flags{display:flex;flex-direction:column;gap:4px;margin-top:8px}
-.bed-tags{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px;min-height:0}
 .tag{font-size:10px;padding:2px 7px;border-radius:9px;border:1px solid}
 .tag.good{color:var(--good);background:var(--good-bg);border-color:var(--good-line)}
 .tag.bad{color:var(--bad);background:var(--bad-bg);border-color:var(--bad-line)}
@@ -257,6 +277,9 @@ main{max-width:1180px;margin:0 auto;padding:20px 16px 60px}
 textarea.input-sm{font-size:13px;line-height:1.4}
 /* mobile pass */
 @media (max-width:640px){
+  .toolbar{padding:7px 8px;gap:6px}
+  .toolbar-count{display:none}
+  .bed-head{padding-right:44px}
   main{padding:12px 10px 60px}
   .topbar{padding:10px 12px 0}
   .brand h1{font-size:18px}
@@ -341,8 +364,8 @@ textarea.input-sm{font-size:13px;line-height:1.4}
 <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
 <script>
 "use strict";
-/* Garden Planner v2.5.1. Single file, no build step, no server, GPL-3.0. */
-const APP = { name: "Garden Planner", file: "garden-planner.html", version: "2.5.1", schema: 6 };
+/* Garden Planner v2.6.0. Single file, no build step, no server, GPL-3.0. */
+const APP = { name: "Garden Planner", file: "garden-planner.html", version: "2.6.0", schema: 6 };
 
 /* ---------- plant library -------------------------------------------------
    per   = plants per square foot (Square Foot Gardening densities)
@@ -645,6 +668,71 @@ function add(parent, kid){
   if (Array.isArray(kid)) { kid.forEach(function(k){ add(parent, k); }); return; }
   parent.appendChild(kid.nodeType ? kid : document.createTextNode(String(kid)));
 }
+/* Three places wanted a file on disk and two wanted a CSV, so they share these
+   rather than each keeping their own copy of the same eight lines. */
+function downloadFile(name, text, mime){
+  const url = URL.createObjectURL(new Blob([text], {type:mime || "text/plain"}));
+  const a = h("a", {href:url, download:name});
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+}
+function toCsv(rows){
+  return rows.map(function(r){
+    return r.map(function(v){
+      const cell = (v === null || v === undefined) ? "" : String(v);
+      return /[",\n]/.test(cell) ? '"' + cell.replace(/"/g, '""') + '"' : cell;
+    }).join(",");
+  }).join("\n");
+}
+function slug(text, fallback){
+  return String(text || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || fallback;
+}
+/* A month and a day, used by the journal, the frost dates and anywhere else a
+   date is a date rather than a timestamp. */
+function dateFields(label, value, onset, opts){
+  const box = h("div", {class:"date-field"});
+  const o = opts || {};
+  const mSel = h("select", {class:"input-sm", "aria-label":label + " month"});
+  if (o.clearable) add(mSel, h("option", {value:"", selected:!value, text:"--"}));
+  MONTHS.forEach(function(m, i){
+    add(mSel, h("option", {value:i, selected:value !== null && value !== undefined && fromDoy(value)[0] === i, text:m}));
+  });
+  const dIn = h("input", {class:"input-sm", type:"number", min:"1", max:"31", style:{width:"66px"},
+    value:(value === null || value === undefined) ? "" : fromDoy(value)[1], "aria-label":label + " day"});
+  const push = function(){
+    if (o.clearable && mSel.value === ""){ onset(null); return; }
+    const m = Number(mSel.value) || 0;
+    const d = Math.max(1, Math.min(31, Number(dIn.value) || 1));
+    onset(doy([m, d]));
+  };
+  mSel.addEventListener("change", push);
+  dIn.addEventListener("change", push);
+  if (label) add(box, h("span", {class:"per date-label", text:label}));
+  add(box, mSel);
+  add(box, dIn);
+  box.read = function(){ return doy([Number(mSel.value) || 0, Math.max(1, Math.min(31, Number(dIn.value) || 1))]); };
+  return box;
+}
+/* One control for a one of several choice, everywhere. */
+function segmented(options, current, onPick, label){
+  const set = h("div", {class:"toggle-set", role:"group", "aria-label":label || "Choose one"});
+  options.forEach(function(o){
+    add(set, h("button", {class:"btn tiny", type:"button", "aria-pressed":String(o[0]) === String(current),
+      text:o[1], onclick:function(){ onPick(o[0]); }}));
+  });
+  return set;
+}
+/* An occasional set of controls, out of the way until it is wanted. */
+function disclosure(id, label, build){
+  const open = !!state.ui.open[id];
+  const box = h("div", {class:"disclosure" + (open ? " open" : "")});
+  add(box, h("button", {class:"btn ghost tiny disclosure-toggle", type:"button", "aria-expanded":open,
+    text:label, onclick:function(){ state.ui.open[id] = !open; persist(); render(); }}));
+  if (open) add(box, h("div", {class:"disclosure-body"}, build()));
+  return box;
+}
 const SVG_NS = "http://www.w3.org/2000/svg";
 function svgEl(tag, attrs, kids){
   const el = document.createElementNS(SVG_NS, tag);
@@ -701,7 +789,7 @@ const state = {
   ui: {tab:"planner", theme:"garden", selected:null, filterType:"all", search:"",
        calMine:false, debug:false, hover:null, testResults:null, editing:null, dragging:null,
        day:todayDoy(), inspect:null, evidenceOnly:false, painting:false, journalFilter:"all",
-       emojiMarks:false, mode:"today", horizon:7, showDone:false, calView:"timing", gantt:null}
+       emojiMarks:false, mode:"today", open:{}, horizon:7, showDone:false, calView:"timing", gantt:null}
 };
 state.activeId = state.layouts[0].id;
 
@@ -1012,10 +1100,6 @@ function canPlant(bed, anchor, id, win){
   })[0];
   if (clash) return {ok:false, why:"That ground is held by " + plantName(clash.p) + " from " + windowText(clash) + "."};
   return {ok:true};
-}
-function windowOf(pl){
-  if (pl.dtm) return {s:pl.s, e:pl.s + Math.max(7, pl.dtm)};
-  return {s:pl.s, e:pl.e};
 }
 function retime(pl){
   if (!pl.dtm) return pl;
@@ -1609,13 +1693,9 @@ async function saveBack(){
   }
 }
 function saveFile(){
-  const blob = new Blob([JSON.stringify(payload(), null, 2)], {type:"application/json"});
-  const url = URL.createObjectURL(blob);
-  const slug = (state.farm.name || "garden").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "garden";
-  const a = h("a", {href:url, download:slug + "-layout.json"});
-  document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
-  toast("Saved " + slug + "-layout.json");
+  const name = slug(state.farm.name, "garden") + "-layout.json";
+  downloadFile(name, JSON.stringify(payload(), null, 2), "application/json");
+  toast("Saved " + name);
 }
 function loadFile(file){
   const reader = new FileReader();
@@ -2214,17 +2294,13 @@ function renderBed(bed){
   warnings.forEach(function(w){ add(flags, h("div", {class:"note warn", text:w})); });
   if (flags.childNodes.length) add(wrap, flags);
 
-  const tools = h("div", {class:"row", style:{marginTop:"8px"}});
-  add(tools, h("button", {class:"btn ghost tiny", type:"button", "aria-pressed":state.ui.editing === bed.id,
-    "aria-expanded":state.ui.editing === bed.id, text:state.ui.editing === bed.id ? "Done" : "Edit bed",
+  /* One control on the face of the bed. Everything else lives in the editor,
+     so the map reads as a garden rather than a control panel. */
+  add(wrap, h("button", {class:"btn ghost tiny bed-edit", type:"button",
+    "aria-expanded":state.ui.editing === bed.id,
+    text:state.ui.editing === bed.id ? "Close" : "Edit",
+    "aria-label":(state.ui.editing === bed.id ? "Close" : "Edit") + " " + bed.name,
     onclick:function(){ state.ui.editing = (state.ui.editing === bed.id) ? null : bed.id; renderPlanner(); }}));
-  add(tools, h("button", {class:"btn ghost tiny", type:"button", text:"Clear", onclick:function(){
-    if (!bed.plantings.length) { toast("That bed is already empty"); return; }
-    snapshot(); bed.plantings = []; commit(true, "Cleared " + bed.name);
-  }}));
-  if (PLAN[bed.id]) add(tools, h("button", {class:"btn ghost tiny", type:"button", text:"Fill from plan",
-    onclick:function(){ snapshot(); applyPlan(bed); commit(true, "Filled " + bed.name + " from the plan"); }}));
-  add(wrap, tools);
   if (state.ui.editing === bed.id) add(wrap, bedEditor(bed));
   return wrap;
 }
@@ -2271,6 +2347,15 @@ function bedEditor(bed){
       });
     add(box, pad);
   }
+  add(box, h("span", {class:"k", text:"Planting"}));
+  const plantRow = h("div", {class:"row"});
+  add(plantRow, h("button", {class:"btn ghost tiny", type:"button", text:"Clear this bed", onclick:function(){
+    if (!bed.plantings.length) { toast("That bed is already empty"); return; }
+    snapshot(); bed.plantings = []; commit(true, "Cleared " + bed.name);
+  }}));
+  if (PLAN[bed.id]) add(plantRow, h("button", {class:"btn ghost tiny", type:"button", text:"Fill from the written plan",
+    onclick:function(){ snapshot(); applyPlan(bed); commit(true, "Filled " + bed.name + " from the plan"); }}));
+  add(box, plantRow);
   add(box, h("span", {class:"k", text:"Copy"}));
   const copyRow = h("div", {class:"row"});
   const target = h("select", {class:"input-sm", "aria-label":"Copy this bed into"});
@@ -2389,20 +2474,13 @@ function renderPalette(){
   add(box, h("input", {class:"input-sm", type:"search", placeholder:"Search plants", value:state.ui.search,
     "aria-label":"Search plants", style:{width:"100%"},
     oninput:function(e){ state.ui.search = e.target.value; renderPlanner(); }}));
-  const filters = h("div", {class:"filters"});
-  ["all"].concat(TYPES).forEach(function(t){
-    add(filters, h("button", {class:"btn ghost tiny", type:"button", "aria-pressed":state.ui.filterType === t,
-      text:t.charAt(0).toUpperCase() + t.slice(1),
-      onclick:function(){ state.ui.filterType = t; renderPlanner(); }}));
-  });
-  add(box, filters);
-  if (state.ui.selected){
-    add(box, h("div", {class:"note good", style:{marginBottom:"8px"},
-      text:"Painting " + plantName(state.ui.selected) + ". Click or drag across squares. Right click or Delete lifts."}));
-  } else {
-    add(box, h("div", {class:"note", style:{marginBottom:"8px", borderColor:"var(--line)", color:"var(--muted)"},
-      text:"No plant picked, so clicking a square opens it for inspection and succession ideas."}));
-  }
+  add(box, h("div", {class:"filters"}, segmented(
+    [["all", "All"]].concat(TYPES.map(function(t){ return [t, t.charAt(0).toUpperCase() + t.slice(1)]; })),
+    state.ui.filterType, function(v){ state.ui.filterType = v; renderPlanner(); }, "Kind of plant")));
+  add(box, h("p", {class:"lede palette-hint", style:{margin:"0 0 8px"},
+    text:state.ui.selected
+      ? ("Painting " + plantName(state.ui.selected) + ". Click or drag across squares, right click or Delete to lift.")
+      : "Pick a plant to paint with. With none picked, clicking a square opens it."}));
   const list = h("div", {class:"chips"});
   const q = state.ui.search.trim().toLowerCase();
   const shown = allPlants().filter(function(p){
@@ -2588,39 +2666,31 @@ function renderPlanner(){
   add(wrap, renderPalette());
 
   const right = h("div");
-  const bar = h("div", {class:"row", style:{marginBottom:"10px"}});
-  add(bar, h("label", {class:"sec-title", style:{margin:0}, for:"layout-pick", text:"Layout"}));
+  const bar = h("div", {class:"toolbar"});
   const pick = h("select", {class:"input-sm", id:"layout-pick", "aria-label":"Open layout",
     onchange:function(e){ switchLayout(e.target.value); }});
   liveLayouts().forEach(function(l){
     add(pick, h("option", {value:l.id, selected:l.id === state.activeId,
                            text:l.name + (l.year ? " (" + l.year + ")" : "")}));
   });
+  add(bar, h("label", {class:"sr-only", for:"layout-pick", text:"Open layout"}));
   add(bar, pick);
-  add(bar, h("button", {class:"btn ghost tiny", type:"button", text:"Copy this layout",
-    onclick:function(){ duplicateLayout(state.activeId); }}));
-  add(bar, h("button", {class:"btn ghost tiny", type:"button", text:"Manage layouts and zone",
-    onclick:function(){ state.ui.tab = "farm"; persist(); render(); }}));
-  add(bar, h("button", {class:"btn ghost tiny", type:"button", text:"Print", onclick:function(){ window.print(); }}));
-  add(right, bar);
-  add(right, seasonBar());
-
-  const head = h("div", {class:"row", style:{marginBottom:"10px"}});
-  add(head, h("h2", {class:"sec-title", style:{margin:0, flex:"1 1 auto"},
-    text:"Garden map, " + state.beds.filter(inPlot).length + " beds on a " + state.plot.rows + " by " + state.plot.cols + " plot"}));
+  add(bar, h("span", {class:"per toolbar-count",
+    text:state.beds.filter(inPlot).length + " beds, " + state.plot.rows + " by " + state.plot.cols + " plot"}));
+  add(bar, h("span", {class:"toolbar-gap"}));
   if (state.beds.some(function(b){ return PLAN[b.id]; }))
-    add(head, h("button", {class:"btn ghost tiny", type:"button", text:"Fill the whole plan", onclick:function(){
+    add(bar, h("button", {class:"btn ghost tiny", type:"button", text:"Fill from the written plan", onclick:function(){
       snapshot();
       state.beds.forEach(function(b){ if (PLAN[b.id]) applyPlan(b); });
       state.containers.forEach(function(c){ if (c.id === "c-broc" && !c.plantings.length) addPlanting(c, 0, "broccoli"); });
       commit(true, "Laid out the written plan");
     }}));
-  add(head, h("button", {class:"btn ghost tiny", type:"button", text:"Undo", onclick:undo}));
-  add(head, h("button", {class:"btn ghost tiny", type:"button", text:"Redo", onclick:redo}));
-  add(right, head);
+  add(bar, h("button", {class:"btn ghost tiny", type:"button", text:"Undo", onclick:undo}));
+  add(bar, h("button", {class:"btn ghost tiny", type:"button", text:"Redo", onclick:redo}));
+  add(right, bar);
+  add(right, seasonBar());
 
   if (state.ui.inspect) add(right, renderInspector());
-  add(right, plotControls());
 
   const plot = h("div", {class:"plot", style:{gridTemplateColumns:"repeat(" + state.plot.cols + ", max-content)"}});
   state.plot.slots.forEach(function(id, i){
@@ -2655,12 +2725,28 @@ function renderPlanner(){
   }}));
   add(right, bw);
 
-  const clearBox = h("div", {class:"row", style:{marginTop:"4px"}});
-  add(clearBox, clearAllButton());
-  add(clearBox, h("span", {class:"lede", style:{margin:0},
-    text:"Clears every planting in this layout. The beds and the plot stay as they are."}));
-  add(right, clearBox);
-
+  add(right, disclosure("containers", "Containers, " + state.containers.filter(function(c){ return !c.archived; }).length +
+    " in this layout", function(){
+      const box = h("div");
+      renderContainers(box);
+      return box;
+    }));
+  add(right, disclosure("plot", "Change the plot, add beds, print", function(){
+    const box = h("div");
+    add(box, plotControls());
+    add(box, h("div", {class:"row", style:{marginTop:"8px"}},
+      h("button", {class:"btn ghost tiny", type:"button", text:"Print this plan",
+        onclick:function(){ window.print(); }}),
+      h("button", {class:"btn ghost tiny", type:"button", text:"Copy this layout",
+        onclick:function(){ duplicateLayout(state.activeId); }}),
+      h("button", {class:"btn ghost tiny", type:"button", text:"Layouts, zone and frost dates",
+        onclick:function(){ state.ui.tab = "farm"; persist(); render(); }})));
+    add(box, h("div", {class:"row", style:{marginTop:"10px"}},
+      clearAllButton(),
+      h("span", {class:"lede", style:{margin:0},
+        text:"Clears every planting in this layout. The beds and the plot stay as they are."})));
+    return box;
+  }));
   add(wrap, right);
   add(host, wrap);
   paintHighlights();
@@ -2771,12 +2857,7 @@ function renderCalendar(){
   const view = state.ui.calView || "timing";
   add(host, h("h2", {text:view === "timing" ? "Planting calendar"
                         : (view === "beds" ? "Bed by bed, across the year" : "Harvest load")}));
-  const views = h("div", {class:"row", style:{margin:"10px 0 14px"}});
-  CAL_VIEWS.forEach(function(v){
-    add(views, h("button", {class:"btn ghost tiny", type:"button", "aria-pressed":view === v[0],
-      text:v[1], onclick:function(){ state.ui.calView = v[0]; persist(); renderCalendar(); }}));
-  });
-  add(host, views);
+  add(host, segmented(CAL_VIEWS, view, function(v){ state.ui.calView = v; persist(); renderCalendar(); }, "Which view"));
   if (view === "beds"){ renderOccupancy(host); return; }
   if (view === "load"){ renderHarvestLoad(host); return; }
   const f = farmFrost();
@@ -2822,15 +2903,10 @@ function renderCalendar(){
 }
 
 /* ---------- containers ---------------------------------------------------- */
-function renderContainers(){
-  const host = qs("#panel-containers");
-  clear(host);
-  const day = state.ui.day;
-  add(host, h("h2", {text:"Container garden"}));
-  add(host, h("p", {class:"lede",
-    text:"Pots, planters and window boxes for " + activeLayout().name + ", on the same season model as the beds. A pot that grows peas in spring and basil in July is the ordinary case. Mint and anything else that runs belongs here rather than in a bed."}));
-  add(host, h("p", {class:"lede", style:{marginTop:"-12px"},
-    text:"Showing " + fmtDate(day) + ". Move the day on the Planner tab."}));
+function renderContainers(host){
+  const day = viewDay();
+  add(host, h("p", {class:"lede", style:{marginTop:0},
+    text:"Pots and window boxes run on the same season model as the beds. Mint and anything else that spreads belongs here rather than in a bed."}));
 
   const live = state.containers.filter(function(c){ return !c.archived; });
   if (!live.length) add(host, h("p", {class:"lede", text:"No containers yet. Add one below."}));
@@ -3044,23 +3120,15 @@ function renderFarm(){
     h("span", {class:"lede", style:{margin:0}, text:frostFree() ? "No frost dates to work from." : (seasonDays() + " frost free days")})));
 
   const f = farmFrost();
-  const mkDate = function(label, md){
-    const mSel = h("select", {class:"input-sm", "aria-label":label + " month"});
-    MONTHS.forEach(function(m, i){ add(mSel, h("option", {value:i, selected:md && md[0] === i, text:m})); });
-    const dIn = h("input", {class:"input-sm", type:"number", min:"1", max:"31", value:md ? md[1] : 1,
-      "aria-label":label + " day", style:{width:"74px"}});
-    return {row:h("div", {class:"row"}, h("span", {class:"k", style:{minWidth:"84px"}, text:label}), mSel, dIn),
-            read:function(){ return [Number(mSel.value), Math.max(1, Math.min(31, Number(dIn.value) || 1))]; }};
-  };
-  const lastD = mkDate("Last frost", state.farm.lastFrost || fromDoy(f.last));
-  const firstD = mkDate("First frost", state.farm.firstFrost || fromDoy(f.first));
+  const lastD = dateFields("Last frost", doy(state.farm.lastFrost || fromDoy(f.last)), function(){}, {});
+  const firstD = dateFields("First frost", doy(state.farm.firstFrost || fromDoy(f.first)), function(){}, {});
   add(zBox, h("p", {class:"lede", style:{margin:"12px 0 6px"},
     text:"Zone dates are averages for a wide band of country. If you know your own site, use it. A hollow or a ridge can be two weeks off the zone."}));
-  add(zBox, lastD.row);
-  add(zBox, firstD.row);
+  add(zBox, lastD);
+  add(zBox, firstD);
   add(zBox, h("div", {class:"row", style:{marginTop:"8px"}},
     h("button", {class:"btn tiny", type:"button", text:"Use my own dates", onclick:function(){
-      const a = lastD.read(), b = firstD.read();
+      const a = fromDoy(lastD.read()), b = fromDoy(firstD.read());
       if (doy(b) <= doy(a) + 20) { toast("The first frost has to fall at least three weeks after the last one."); return; }
       snapshot();
       state.farm.custom = true; state.farm.lastFrost = a; state.farm.firstFrost = b;
@@ -3199,26 +3267,6 @@ function allPlantings(){
   });
   return out.sort(function(a, b){ return a.pl.s - b.pl.s; });
 }
-function dayInput(label, value, onset){
-  const box = h("div", {class:"row", style:{gap:"4px"}});
-  const mSel = h("select", {class:"input-sm", "aria-label":label + " month", style:{padding:"4px 6px"}});
-  add(mSel, h("option", {value:"", selected:!value, text:"--"}));
-  MONTHS.forEach(function(m, i){
-    add(mSel, h("option", {value:i, selected:value && fromDoy(value)[0] === i, text:m}));
-  });
-  const dIn = h("input", {class:"input-sm", type:"number", min:"1", max:"31", style:{width:"62px", padding:"4px 6px"},
-    value:value ? fromDoy(value)[1] : "", "aria-label":label + " day"});
-  const push = function(){
-    if (mSel.value === "") { onset(null); return; }
-    const d = Math.max(1, Math.min(31, Number(dIn.value) || 1));
-    onset(doy([Number(mSel.value), d]));
-  };
-  mSel.addEventListener("change", push);
-  dIn.addEventListener("change", push);
-  add(box, h("span", {class:"per", style:{minWidth:"62px"}, text:label}));
-  add(box, mSel); add(box, dIn);
-  return box;
-}
 function journalCsv(){
   const rows = [["layout", "year", "bed", "row", "column", "plant", "variety", "days to maturity", "family",
                  "planned out", "planned end", "sown", "up", "planted out", "first pick", "last pick",
@@ -3233,12 +3281,7 @@ function journalCsv(){
                d(e.pl.s), d(e.pl.e), d(a.sown), d(a.up), d(a.out), d(a.first), d(a.last),
                a.yield || "", a.outcome || "", a.photo || "", a.note || ""]);
   });
-  return rows.map(function(r){
-    return r.map(function(v){
-      const s = String(v);
-      return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
-    }).join(",");
-  }).join("\n");
+  return toCsv(rows);
 }
 function renderJournal(){
   const host = qs("#panel-journal");
@@ -3250,17 +3293,10 @@ function renderJournal(){
          ". Next February this is worth more than the seed catalogue."}));
 
   const bar = h("div", {class:"row", style:{marginBottom:"14px"}});
-  [["all", "Everything"], ["open", "Nothing recorded yet"], ["done", "Recorded"], ["failed", "Failures"]]
-    .forEach(function(f){
-      add(bar, h("button", {class:"btn ghost tiny", type:"button", "aria-pressed":state.ui.journalFilter === f[0],
-        text:f[1], onclick:function(){ state.ui.journalFilter = f[0]; renderJournal(); }}));
-    });
+  add(bar, segmented([["all", "Everything"], ["open", "Not recorded"], ["done", "Recorded"], ["failed", "Failures"]],
+    state.ui.journalFilter, function(v){ state.ui.journalFilter = v; persist(); renderJournal(); }, "Which entries"));
   add(bar, h("button", {class:"btn tiny", type:"button", text:"Export this season as CSV", onclick:function(){
-    const blob = new Blob([journalCsv()], {type:"text/csv"});
-    const url = URL.createObjectURL(blob);
-    const a = h("a", {href:url, download:(l.name.toLowerCase().replace(/[^a-z0-9]+/g, "-") || "season") + "-journal.csv"});
-    document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+    downloadFile(slug(l.name, "season") + "-journal.csv", journalCsv(), "text/csv");
     toast("Journal exported");
   }}));
   add(host, bar);
@@ -3297,7 +3333,7 @@ function renderJournal(){
     const dates = h("div", {class:"journal-dates"});
     [["Sown", "sown"], ["Up", "up"], ["Out", "out"], ["First pick", "first"], ["Last pick", "last"]]
       .forEach(function(f){
-        add(dates, dayInput(f[0], a[f[1]], function(v){ a[f[1]] = v; persist(); }));
+        add(dates, dateFields(f[0], a[f[1]], function(v){ a[f[1]] = v; persist(); }, {clearable:true}));
       });
     add(card, dates);
     const foot = h("div", {class:"row", style:{marginTop:"6px"}});
@@ -3355,9 +3391,17 @@ function taskLine(t, today){
     onclick:function(){ markTaskDone(t, todayDoy()); }}));
   return row;
 }
-function renderWeek(){
-  const host = qs("#panel-week");
+const DO_VIEWS = [["week", "What is due"], ["seeds", "Seed order"]];
+function renderDo(){
+  const host = qs("#panel-do");
   clear(host);
+  const view = state.ui.doView || "week";
+  add(host, segmented(DO_VIEWS, view, function(v){ state.ui.doView = v; persist(); renderDo(); }, "Which list"));
+  const body = h("div", {class:"tab-body"});
+  add(host, body);
+  if (view === "seeds") renderSeeds(body); else renderWeek(body);
+}
+function renderWeek(host){
   const l = activeLayout();
   const year = Number(l.year) || null;
   const ahead = year && year > new Date().getFullYear();
@@ -3372,12 +3416,11 @@ function renderWeek(){
       : ("Read off " + l.name + " for " + fmtDate(today) +
          ". Every line comes from a planting you already made, so if a date looks wrong the planting is what to fix.")}));
   const bar = h("div", {class:"row", style:{marginBottom:"14px"}});
-  if (!ahead) HORIZONS.forEach(function(hz){
-    add(bar, h("button", {class:"btn ghost tiny", type:"button", "aria-pressed":String(span) === hz[0],
-      text:hz[1], onclick:function(){ state.ui.horizon = Number(hz[0]); persist(); renderWeek(); }}));
-  });
+  if (!ahead) add(bar, segmented(HORIZONS, String(span), function(v){
+    state.ui.horizon = Number(v); persist(); renderDo();
+  }, "How far ahead"));
   add(bar, h("button", {class:"btn ghost tiny", type:"button", "aria-pressed":!!state.ui.showDone,
-    text:"Include what is done", onclick:function(){ state.ui.showDone = !state.ui.showDone; persist(); renderWeek(); }}));
+    text:"Include what is done", onclick:function(){ state.ui.showDone = !state.ui.showDone; persist(); renderDo(); }}));
   add(host, bar);
 
   const late = ahead ? [] : overdueTasks(today, 21);
@@ -3406,9 +3449,7 @@ function renderWeek(){
 }
 
 /* ---------- seed order ------------------------------------------------------ */
-function renderSeeds(){
-  const host = qs("#panel-seeds");
-  clear(host);
+function renderSeeds(host){
   const rows = seedPlan();
   const year = Number(activeLayout().year) || new Date().getFullYear();
   add(host, h("h2", {text:"Seed order"}));
@@ -3429,14 +3470,8 @@ function renderSeeds(){
       const lines = [head].concat(rows.map(function(r){
         return [r.plant.name, r.v || "", r.squares, r.plants, r.unit, r.onHand, r.have && r.have.year || "",
                 Math.round(r.viability * 100) + "%", r.toSow, r.short];
-      })).map(function(l){ return l.map(function(v){
-        const s = String(v);
-        return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
-      }).join(","); }).join("\n");
-      const url = URL.createObjectURL(new Blob([lines], {type:"text/csv"}));
-      const a = h("a", {href:url, download:"seed-order-" + year + ".csv"});
-      document.body.appendChild(a); a.click(); a.remove();
-      setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+      }));
+      downloadFile("seed-order-" + year + ".csv", toCsv(lines), "text/csv");
       toast("Seed order exported");
     }})));
 
@@ -3467,7 +3502,7 @@ function renderSeeds(){
       if (count || (y >= 1990 && y <= 2100))
         state.farm.seeds.push({p:r.p, v:r.v || null, count:count, year:(y >= 1990 && y <= 2100) ? y : null});
       persist();
-      renderSeeds();
+      renderDo();
     };
     countIn.addEventListener("change", save);
     yearIn.addEventListener("change", save);
@@ -3804,6 +3839,52 @@ function selfTest(){
     if (pls[1].p !== "basil" || pls[1].i !== 2) return "the basil moved";
     if (res.dropped.indexOf("nope") < 0) return "the unknown id was not reported";
     return true;
+  });
+  t("Every tab has a panel and every panel has a tab", function(){
+    const missing = TABS.filter(function(t){ return !document.getElementById("panel-" + t[0]); })
+      .map(function(t){ return t[1]; });
+    if (missing.length) return "no panel for " + missing.join(", ");
+    const panels = document.querySelectorAll('[id^="panel-"]').length;
+    if (panels !== TABS.length) return panels + " panels for " + TABS.length + " tabs";
+    const open = document.querySelectorAll('.tab-btn[aria-selected="true"]').length;
+    return open === 1 ? true : open + " tabs claim to be open";
+  });
+  t("One control does one job, and choices look like choices", function(){
+    /* A one of several choice is a segmented set. An on or off is a pressed
+       button. Mixing the two was why the marks switch read as two buttons that
+       did nothing. */
+    let picked = null;
+    const set = segmented([["a", "A"], ["b", "B"], ["c", "C"]], "b", function(v){ picked = v; }, "Probe");
+    const kids = set.querySelectorAll("button[aria-pressed]");
+    if (kids.length !== 3) return "the segmented control lost a choice";
+    if (set.querySelectorAll('button[aria-pressed="true"]').length !== 1) return "not exactly one choice is on";
+    if (kids[1].getAttribute("aria-pressed") !== "true") return "the wrong choice is marked on";
+    kids[2].click();
+    if (picked !== "c") return "picking a choice reported " + picked;
+    /* And nothing on screen disagrees with that rule. */
+    const live = document.querySelectorAll(".toggle-set");
+    for (const s of live){
+      const on = s.querySelectorAll('button[aria-pressed="true"]').length;
+      if (on !== 1) return on + " choices are marked on in one set on screen";
+    }
+    return true;
+  });
+  t("Occasional controls stay folded away until asked for", function(){
+    const id = "probe_disclosure";
+    const was = state.ui.open[id];
+    state.ui.open[id] = false;
+    let built = 0;
+    const shut = disclosure(id, "Probe", function(){ built++; return h("div", {text:"body"}); });
+    if (shut.querySelector(".disclosure-body")) return "a closed disclosure drew its contents anyway";
+    if (built !== 0) return "a closed disclosure built its contents for nothing";
+    if (shut.querySelector(".disclosure-toggle").getAttribute("aria-expanded") !== "false")
+      return "a closed disclosure does not say it is closed";
+    state.ui.open[id] = true;
+    const open = disclosure(id, "Probe", function(){ built++; return h("div", {text:"body"}); });
+    state.ui.open[id] = was;
+    if (!open.querySelector(".disclosure-body")) return "an open disclosure drew nothing";
+    return open.querySelector(".disclosure-toggle").getAttribute("aria-expanded") === "true"
+      ? true : "an open disclosure does not say it is open";
   });
   t("The version marker in the file matches the version the app reports", function(){
     /* This is the marker you read off a deployed page to know what is actually
@@ -4457,7 +4538,7 @@ function renderAbout(){
     text:"Nothing leaves the browser. Save writes the whole farm, every layout included, to a JSON file named after the farm, and Load reads it back. The browser also keeps a working copy so a reload does not lose the bed you just planted. Loaded files are checked field by field and anything unrecognized is dropped."}));
   add(panel, h("h3", {class:"sec-title", text:"Keyboard"}));
   add(panel, h("p", {style:{margin:"0", fontSize:"13.5px"},
-    text:"Tab to a square, arrow keys to move within a bed, Enter or Space to plant, Delete to lift, Escape to stop painting or close the inspector. Ctrl+Z undoes and Ctrl+Shift+Z redoes, Ctrl+S saves, square brackets step the day and shift with them steps a week. Drag across squares to paint a run. Beds move by dragging or by the arrow pad in Edit bed, so nothing depends on a mouse."}));
+    text:"Seven tabs: Plan, Do, Season, Record, Plants, Farm, About. Tab to a square, arrow keys to move within a bed, Enter or Space to plant, Delete to lift, Escape to stop painting or close the inspector. Ctrl+Z undoes and Ctrl+Shift+Z redoes, Ctrl+S saves, square brackets step the day and shift with them steps a week. Drag across squares to paint a run. Beds move by dragging or by the arrow pad in Edit bed, so nothing depends on a mouse."}));
   add(host, panel);
 
   const p2 = h("div", {class:"panel", style:{marginBottom:"16px"}});
@@ -4526,9 +4607,11 @@ function renderAbout(){
 }
 
 /* ---------- shell --------------------------------------------------------- */
-const TABS = [["planner","Planner"],["week","This week"],["calendar","Calendar"],["seeds","Seeds"],
-              ["journal","Journal"],["containers","Containers"],["library","Library"],["farm","Farm"],
-              ["about","About"]];
+/* Seven places, each with one job. Containers moved into the plan, because a pot
+   is part of the layout you are arranging. The two derived lists live together
+   under Do, and the three year long views under Season. */
+const TABS = [["planner","Plan"],["do","Do"],["calendar","Season"],["journal","Record"],
+              ["library","Plants"],["farm","Farm"],["about","About"]];
 const THEMES = [["garden","Garden"],["night","Night"],["contrast","High contrast"]];
 
 function buildShell(){
@@ -4564,10 +4647,9 @@ function render(){
   buildShell();
   if (state.ui.tab === "planner") renderPlanner();
   else if (state.ui.tab === "calendar") renderCalendar();
-  else if (state.ui.tab === "containers") renderContainers();
+
   else if (state.ui.tab === "library") renderLibrary();
-  else if (state.ui.tab === "week") renderWeek();
-  else if (state.ui.tab === "seeds") renderSeeds();
+  else if (state.ui.tab === "do") renderDo();
   else if (state.ui.tab === "journal") renderJournal();
   else if (state.ui.tab === "farm") renderFarm();
   else renderAbout();

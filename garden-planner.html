@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Garden Planner :: garden-planner.html :: v2.6.0 -->
+<!-- Garden Planner :: garden-planner.html :: v2.6.1 -->
 <html lang="en" data-theme="garden">
 <head>
 <meta charset="utf-8">
@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600&family=DM+Sans:wght@300;400;500&display=swap">
 <style>
-/* Garden Planner v2.6.0. Fonts are additive only: the local stacks below carry the
+/* Garden Planner v2.6.1. Fonts are additive only: the local stacks below carry the
    design if the remote sheet never loads (offline, file:// use). */
 :root{
   --font-display:"Lora","Iowan Old Style",Georgia,"Times New Roman",serif;
@@ -26,7 +26,7 @@
   --good:#1a6b3c; --good-bg:#e7f3e7; --good-line:#5a9e5a;
   --bad:#a8321f; --bad-bg:#fbeae6; --bad-line:#d07a63;
   --warn:#775a15; --warn-bg:#f7f0dc;
-  --frost:#7fa8cf; --indoor:#8fbcdf; --transplant:#8fc99a; --direct:#4f9a5c; --harvest:#d9a441;
+  --frost:#5b8fc4; --indoor:#4a86bd; --transplant:#4e9668; --direct:#2f7a44; --harvest:#bf7d1a;
   --terracotta:#b5643c;
 }
 :root[data-theme="night"]{
@@ -37,7 +37,7 @@
   --good:#8fd6a2; --good-bg:#1d3324; --good-line:#4e8a5e;
   --bad:#f0a08c; --bad-bg:#3a201a; --bad-line:#a05a45;
   --warn:#e0c070; --warn-bg:#332b16;
-  --frost:#7fa8cf; --indoor:#6f9dc4; --transplant:#6fae7e; --direct:#4f9a5c; --harvest:#c8963a;
+  --frost:#7fa8cf; --indoor:#7fb0d8; --transplant:#79c48c; --direct:#4f9a5c; --harvest:#d9a441;
   --terracotta:#c47a52;
 }
 :root[data-theme="contrast"]{
@@ -225,15 +225,21 @@ main{max-width:1180px;margin:0 auto;padding:20px 16px 60px}
 .cal-row{display:grid;grid-template-columns:minmax(120px,150px) minmax(0,1fr);gap:10px;align-items:center;margin-bottom:4px}
 .cal-name{display:flex;align-items:center;gap:6px;font-size:12px;min-width:0}
 .cal-name .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.cal-track{position:relative;height:21px;background:var(--panel-2);border:1px solid var(--line-strong);border-radius:5px;overflow:hidden}
-.cal-bar{position:absolute;height:5px;border-radius:3px}
+.cal-track{position:relative;height:26px;background:var(--panel-2);border:1px solid var(--line-strong);border-radius:5px;overflow:hidden}
+.cal-bar{position:absolute;height:6px;border-radius:3px}
 .cal-months{position:absolute;inset:0;display:grid;grid-template-columns:repeat(12,1fr);pointer-events:none}
 .cal-months i{border-right:1px solid var(--line);opacity:.5}
 .cal-months i:last-child{border-right:none}
 .cal-head{font-size:10px;text-align:center;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
 .cal-frost{position:absolute;top:0;bottom:0;width:2px;background:var(--frost)}
 .cal-frost-zone{position:absolute;top:0;bottom:0;background:var(--frost);opacity:.14}
-.dim{opacity:.42}
+/* Emphasise what is planted rather than washing out everything that is not.
+   Dimming every unplanted row put the whole chart at 42% opacity, which is
+   what a nearly empty garden looked like: a page of pale smudges. */
+.cal-row .cal-name{color:var(--muted)}
+.cal-row.mine .cal-name{color:var(--ink);font-weight:600}
+.cal-row.mine .cal-track{box-shadow:inset 3px 0 0 var(--accent)}
+.dim{opacity:.62}
 .legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:16px;font-size:12px;color:var(--muted)}
 .legend span{display:inline-flex;align-items:center;gap:6px}
 .legend i{width:22px;height:6px;border-radius:3px;display:inline-block}
@@ -364,8 +370,8 @@ textarea.input-sm{font-size:13px;line-height:1.4}
 <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
 <script>
 "use strict";
-/* Garden Planner v2.6.0. Single file, no build step, no server, GPL-3.0. */
-const APP = { name: "Garden Planner", file: "garden-planner.html", version: "2.6.0", schema: 6 };
+/* Garden Planner v2.6.1. Single file, no build step, no server, GPL-3.0. */
+const APP = { name: "Garden Planner", file: "garden-planner.html", version: "2.6.1", schema: 6 };
 
 /* ---------- plant library -------------------------------------------------
    per   = plants per square foot (Square Foot Gardening densities)
@@ -2871,9 +2877,11 @@ function renderCalendar(){
     text:"Every window is the Zone 7a reference timing re-projected onto those dates. Spring sowing follows the last frost, autumn sowing and late harvest follow the first frost."}));
   const t = tally();
   add(host, h("div", {class:"row", style:{marginBottom:"14px"}},
-    h("button", {class:"btn ghost tiny", type:"button", "aria-pressed":state.ui.calMine,
-      text:state.ui.calMine ? "Showing planted only" : "Showing every plant",
-      onclick:function(){ state.ui.calMine = !state.ui.calMine; renderCalendar(); }})));
+    segmented([["all", "Every plant"], ["mine", "Only what is planted"]],
+      state.ui.calMine ? "mine" : "all",
+      function(v){ state.ui.calMine = (v === "mine"); persist(); renderCalendar(); }, "Which plants"),
+    h("span", {class:"lede", style:{margin:0},
+      text:"Rows in this layout are marked with a green rule and a bolder name."})));
 
   const head = h("div", {class:"cal-row"});
   add(head, h("div"));
@@ -2887,7 +2895,7 @@ function renderCalendar(){
   if (!rows.length) add(host, h("p", {class:"lede", text:"Nothing is planted yet, so this view is empty. Switch back to every plant."}));
   rows.forEach(function(p){
     const mine = !!t[p.id];
-    const row = h("div", {class:"cal-row" + (mine ? "" : " dim")});
+    const row = h("div", {class:"cal-row" + (mine ? " mine" : "")});
     const note = seasonNote(p);
     add(row, h("div", {class:"cal-name"}, glyph(p, "16px"), h("span", {class:"nm", text:p.name}),
       note ? h("span", {title:note, "aria-label":p.name + ": " + note, style:{color:"var(--warn)"}, text:"!"}) : null,
@@ -3839,6 +3847,43 @@ function selfTest(){
     if (pls[1].p !== "basil" || pls[1].i !== 2) return "the basil moved";
     if (res.dropped.indexOf("nope") < 0) return "the unknown id was not reported";
     return true;
+  });
+  t("Chart colours are strong enough to read against the track", function(){
+    /* The calendar bars carry the meaning, so they get the same treatment as any
+       other graphic that has to be seen: three to one against what is behind
+       them. They were failing at less than two, and the row opacity took them
+       down to about one point three. */
+    const styles = getComputedStyle(document.documentElement);
+    const val = function(name){ return styles.getPropertyValue(name).trim(); };
+    const hex = function(h){
+      h = h.replace("#", "");
+      return [0, 2, 4].map(function(i){ return parseInt(h.slice(i, i + 2), 16); });
+    };
+    const lum = function(c){
+      const s = c.map(function(v){
+        v /= 255;
+        return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+      });
+      return 0.2126 * s[0] + 0.7152 * s[1] + 0.0722 * s[2];
+    };
+    const back = val("--panel-2");
+    if (!/^#[0-9a-f]{6}$/i.test(back)) return true;
+    const bad = [];
+    ["--indoor", "--transplant", "--direct", "--harvest", "--frost"].forEach(function(name){
+      const c = val(name);
+      if (!/^#[0-9a-f]{6}$/i.test(c)) return;
+      const a = lum(hex(c)), b = lum(hex(back));
+      const ratio = (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+      if (ratio < 3) bad.push(name.slice(2) + " at " + ratio.toFixed(2) + " to 1");
+    });
+    return bad.length ? bad.join(", ") : true;
+  });
+  t("Nothing on the calendar is faded to the point of being unreadable", function(){
+    const faded = Array.prototype.filter.call(document.querySelectorAll(".cal-row"), function(row){
+      const o = Number(getComputedStyle(row).opacity);
+      return o && o < 0.6;
+    }).length;
+    return faded ? faded + " rows are faded below six tenths" : true;
   });
   t("Every tab has a panel and every panel has a tab", function(){
     const missing = TABS.filter(function(t){ return !document.getElementById("panel-" + t[0]); })

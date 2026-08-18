@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Garden Planner :: garden-planner.html :: v2.7.0 -->
+<!-- Garden Planner :: garden-planner.html :: v2.7.1 -->
 <html lang="en" data-theme="garden">
 <head>
 <meta charset="utf-8">
@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600&family=DM+Sans:wght@300;400;500&display=swap">
 <style>
-/* Garden Planner v2.7.0. Fonts are additive only: the local stacks below carry the
+/* Garden Planner v2.7.1. Fonts are additive only: the local stacks below carry the
    design if the remote sheet never loads (offline, file:// use). */
 :root{
   --font-display:"Lora","Iowan Old Style",Georgia,"Times New Roman",serif;
@@ -399,8 +399,8 @@ textarea.input-sm{font-size:13px;line-height:1.4}
 <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
 <script>
 "use strict";
-/* Garden Planner v2.7.0. Single file, no build step, no server, GPL-3.0. */
-const APP = { name: "Garden Planner", file: "garden-planner.html", version: "2.7.0", schema: 6 };
+/* Garden Planner v2.7.1. Single file, no build step, no server, GPL-3.0. */
+const APP = { name: "Garden Planner", file: "garden-planner.html", version: "2.7.1", schema: 6 };
 
 /* ---------- plant library -------------------------------------------------
    per   = plants per square foot (Square Foot Gardening densities)
@@ -653,7 +653,7 @@ function initialContainers(){
     {id:"c3",name:"Window box",size:"24 in box",cols:1,rows:1,kind:"container",plantings:[],archived:false}
   ];
 }
-/* The written plan, one click away. Patterns are read row by row. */
+/* The template, one click away. Patterns are read row by row. */
 const PLAN = {
   "bed-east":  {fill:"tomato",lastRow:["basil","marigold","basil","marigold"]},
   /* Squash sprawls over four squares, so the sisters are laid in blocks rather
@@ -2399,8 +2399,8 @@ function bedEditor(bed){
     if (!bed.plantings.length) { toast("That bed is already empty"); return; }
     snapshot(); bed.plantings = []; commit(true, "Cleared " + bed.name);
   }}));
-  if (PLAN[bed.id]) add(plantRow, h("button", {class:"btn ghost tiny", type:"button", text:"Fill from the written plan",
-    onclick:function(){ snapshot(); applyPlan(bed); commit(true, "Filled " + bed.name + " from the plan"); }}));
+  if (PLAN[bed.id]) add(plantRow, h("button", {class:"btn ghost tiny", type:"button", text:"Fill from Template",
+    onclick:function(){ snapshot(); applyPlan(bed); commit(true, "Filled " + bed.name + " from the template"); }}));
   add(box, plantRow);
   add(box, h("span", {class:"k", text:"Copy"}));
   const copyRow = h("div", {class:"row"});
@@ -2557,7 +2557,7 @@ function renderPalette(){
   add(box, h("h2", {class:"sec-title", style:{marginTop:"14px"},
     text:seasonView() ? "Planted this season" : ("In the ground on " + fmtDate(state.ui.day))}));
   if (!ids.length) add(box, h("p", {class:"lede", style:{margin:0},
-    text:"Nothing planted yet. Pick a plant, or use Fill the whole plan."}));
+    text:"Nothing planted yet. Pick a plant, or use Fill Beds from Template."}));
   ids.sort(function(a, b){ return (t[b] ? t[b].squares : 0) - (t[a] ? t[a].squares : 0); }).forEach(function(id){
     const p = PLANT_MAP[id];
     if (!p) return;
@@ -2726,11 +2726,11 @@ function renderPlanner(){
     text:state.beds.filter(inPlot).length + " beds, " + state.plot.rows + " by " + state.plot.cols + " plot"}));
   add(bar, h("span", {class:"toolbar-gap"}));
   if (state.beds.some(function(b){ return PLAN[b.id]; }))
-    add(bar, h("button", {class:"btn ghost tiny", type:"button", text:"Fill from the written plan", onclick:function(){
+    add(bar, h("button", {class:"btn ghost tiny", type:"button", text:"Fill Beds from Template", onclick:function(){
       snapshot();
       state.beds.forEach(function(b){ if (PLAN[b.id]) applyPlan(b); });
       state.containers.forEach(function(c){ if (c.id === "c-broc" && !c.plantings.length) addPlanting(c, 0, "broccoli"); });
-      commit(true, "Laid out the written plan");
+      commit(true, "Beds filled from the template");
     }}));
   add(bar, h("button", {class:"btn ghost tiny", type:"button", text:"Undo", onclick:undo}));
   add(bar, h("button", {class:"btn ghost tiny", type:"button", text:"Redo", onclick:redo}));
@@ -4815,7 +4815,7 @@ function selfTest(){
     return el.querySelector("img") === null && el.textContent.indexOf("<img") === 0
       ? true : "markup survived: " + el.innerHTML;
   });
-  t("The written plan only names plants that exist", function(){
+  t("The template only names plants that exist", function(){
     const bad = [];
     Object.keys(PLAN).forEach(function(bedId){
       const p = PLAN[bedId];

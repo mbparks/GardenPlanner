@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Garden Planner :: garden-planner.html :: v2.7.1 -->
+<!-- Garden Planner :: garden-planner.html :: v2.8.0 -->
 <html lang="en" data-theme="garden">
 <head>
 <meta charset="utf-8">
@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600&family=DM+Sans:wght@300;400;500&display=swap">
 <style>
-/* Garden Planner v2.7.1. Fonts are additive only: the local stacks below carry the
+/* Garden Planner v2.8.0. Fonts are additive only: the local stacks below carry the
    design if the remote sheet never loads (offline, file:// use). */
 :root{
   --font-display:"Lora","Iowan Old Style",Georgia,"Times New Roman",serif;
@@ -302,6 +302,9 @@ main{max-width:1180px;margin:0 auto;padding:20px 16px 60px}
 .tally.dim{opacity:.45}
 .inspector{margin-bottom:12px;border-color:var(--accent)}
 .inspector .chip{width:auto}
+.tpl-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:8px 0;border-top:1px solid var(--line)}
+.tpl-row:first-of-type{border-top:none}
+.tpl-row .body{flex:1 1 200px;min-width:0}
 /* journal */
 .journal-row{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--line);
   border-radius:var(--radius);padding:12px;margin-bottom:8px}
@@ -399,8 +402,8 @@ textarea.input-sm{font-size:13px;line-height:1.4}
 <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
 <script>
 "use strict";
-/* Garden Planner v2.7.1. Single file, no build step, no server, GPL-3.0. */
-const APP = { name: "Garden Planner", file: "garden-planner.html", version: "2.7.1", schema: 6 };
+/* Garden Planner v2.8.0. Single file, no build step, no server, GPL-3.0. */
+const APP = { name: "Garden Planner", file: "garden-planner.html", version: "2.8.0", schema: 6 };
 
 /* ---------- plant library -------------------------------------------------
    per   = plants per square foot (Square Foot Gardening densities)
@@ -624,7 +627,7 @@ function initialPlot(){
 
 function initialFarm(){
   return {name:"My garden", zone:"7a", custom:false, lastFrost:[3,7], firstFrost:[9,28],
-          people:2, seeds:[]};
+          people:2, seeds:[], templates:[]};
 }
 function initialLayout(name){
   return {id:"layout_" + Date.now() + "_" + Math.floor(Math.random() * 1000),
@@ -1608,8 +1611,36 @@ function validate(data){
     return {p:id, v:str(x && x.v, null, 40), count:intIn(x && x.count, 0, 100000, 0),
             year:intIn(x && x.year, 1990, 2100, null)};
   }).filter(Boolean) : [];
+  const readTplPlantings = function(list, cols, rows){
+    return (Array.isArray(list) ? list : []).slice(0, 400).map(function(pl){
+      const id = cellOf(pl && pl.p);
+      if (!id) return null;
+      const s = intIn(pl.s, 1, 365, 1);
+      let e = intIn(pl.e, 1, 730, s + 60);
+      if (e <= s) e = s + 60;
+      return {p:id, i:intIn(pl.i, 0, cols * rows - 1, 0), s:s, e:e,
+              v:str(pl.v, null, 40), dtm:intIn(pl.dtm, 7, 400, null)};
+    }).filter(Boolean);
+  };
+  const tpls = Array.isArray(data.farm && data.farm.templates) ? data.farm.templates.slice(0, 100).map(function(t, i){
+    const kind = (t && t.kind === "bed") ? "bed" : "layout";
+    const beds = (Array.isArray(t && t.beds) ? t.beds : []).slice(0, 60).map(function(b, k){
+      const cols = intIn(b && b.cols, 1, 20, 4), rows = intIn(b && b.rows, 1, 20, 4);
+      return {name:str(b && b.name, "Bed " + (k + 1), 40), cols:cols, rows:rows,
+              plantings:readTplPlantings(b && b.plantings, cols, rows)};
+    }).filter(function(b){ return b.plantings.length; });
+    const pots = (Array.isArray(t && t.containers) ? t.containers : []).slice(0, 60).map(function(c, k){
+      return {name:str(c && c.name, "Pot " + (k + 1), 40), plantings:readTplPlantings(c && c.plantings, 1, 1)};
+    }).filter(function(c){ return c.plantings.length; });
+    if (!beds.length && !pots.length) return null;
+    return {id:str(t && t.id, "tpl_" + i, 40), kind:kind, built:false, containers:kind === "bed" ? [] : pots,
+            name:str(t && t.name, "Template " + (i + 1), 40), note:str(t && t.note, "", 140),
+            created:intIn(t && t.created, 1900, 2200, null),
+            beds:kind === "bed" ? beds.slice(0, 1) : beds};
+  }).filter(Boolean) : [];
   const farm = {
     seeds:seeds,
+    templates:tpls,
     people:intIn(data.farm && data.farm.people, 1, 40, 2),
     name:str(data.farm && data.farm.name, "My garden", 60),
     zone:zoneOk ? data.farm.zone : "7a",
@@ -2367,7 +2398,7 @@ function bedEditor(bed){
   add(box, h("div", {class:"row"}, colIn, h("span", {class:"per", text:"ft across"}),
                                    rowIn, h("span", {class:"per", text:"ft deep"}),
                                    depIn, h("span", {class:"per", text:"in deep soil"})));
-  add(box, h("button", {class:"btn tiny", type:"button", text:"Apply", onclick:function(){
+  add(box, h("button", {class:"btn tiny", type:"button", text:"Apply changes", onclick:function(){
     const cols = Math.max(1, Math.min(20, Math.floor(Number(colIn.value) || bed.cols)));
     const rows = Math.max(1, Math.min(20, Math.floor(Number(rowIn.value) || bed.rows)));
     snapshot();
@@ -2399,9 +2430,34 @@ function bedEditor(bed){
     if (!bed.plantings.length) { toast("That bed is already empty"); return; }
     snapshot(); bed.plantings = []; commit(true, "Cleared " + bed.name);
   }}));
-  if (PLAN[bed.id]) add(plantRow, h("button", {class:"btn ghost tiny", type:"button", text:"Fill from Template",
-    onclick:function(){ snapshot(); applyPlan(bed); commit(true, "Filled " + bed.name + " from the template"); }}));
   add(box, plantRow);
+  add(box, h("span", {class:"k", text:"Template"}));
+  const tplRow = h("div", {class:"row"});
+  const fits = bedTemplatesFor(bed);
+  if (PLAN[bed.id]) add(tplRow, h("button", {class:"btn ghost tiny", type:"button", text:"Fill from Template",
+    onclick:function(){ snapshot(); applyPlan(bed); commit(true, "Filled " + bed.name + " from the template"); }}));
+  if (fits.length){
+    const sel = h("select", {class:"input-sm", "aria-label":"Pattern for " + bed.name, style:{minWidth:"140px"}});
+    fits.forEach(function(t){
+      add(sel, h("option", {value:t.id, text:t.name + " (" + t.beds[0].cols + " by " + t.beds[0].rows + ")"}));
+    });
+    add(tplRow, sel);
+    add(tplRow, h("button", {class:"btn ghost tiny", type:"button", text:"Apply pattern", onclick:function(){
+      const t = templateById(sel.value);
+      snapshot();
+      const res = applyTemplate(t, bed);
+      persist(); render();
+      toast(templateReport(res, t.name));
+    }}));
+  }
+  const saveIn = h("input", {class:"input-sm", placeholder:"Save this bed as", "aria-label":"Name for this bed pattern",
+                             style:{flex:"1 1 130px"}});
+  add(tplRow, saveIn);
+  add(tplRow, h("button", {class:"btn ghost tiny", type:"button", text:"Save pattern", onclick:function(){
+    if (!bed.plantings.length){ toast("That bed is empty, so there is no pattern to save."); return; }
+    saveTemplate(captureBed(bed, saveIn.value.trim().slice(0, 40) || null));
+  }}));
+  add(box, tplRow);
   add(box, h("span", {class:"k", text:"Copy"}));
   const copyRow = h("div", {class:"row"});
   const target = h("select", {class:"input-sm", "aria-label":"Copy this bed into"});
@@ -2725,18 +2781,16 @@ function renderPlanner(){
   add(bar, h("span", {class:"per toolbar-count",
     text:state.beds.filter(inPlot).length + " beds, " + state.plot.rows + " by " + state.plot.cols + " plot"}));
   add(bar, h("span", {class:"toolbar-gap"}));
-  if (state.beds.some(function(b){ return PLAN[b.id]; }))
-    add(bar, h("button", {class:"btn ghost tiny", type:"button", text:"Fill Beds from Template", onclick:function(){
-      snapshot();
-      state.beds.forEach(function(b){ if (PLAN[b.id]) applyPlan(b); });
-      state.containers.forEach(function(c){ if (c.id === "c-broc" && !c.plantings.length) addPlanting(c, 0, "broccoli"); });
-      commit(true, "Beds filled from the template");
-    }}));
+  add(bar, h("button", {class:"btn ghost tiny", type:"button", "aria-expanded":!!state.ui.tplPanel,
+    text:"Fill Beds from Template",
+    onclick:function(){ state.ui.tplPanel = !state.ui.tplPanel; renderPlanner();
+      const p = qs("#template-panel"); if (p) p.focus(); }}));
   add(bar, h("button", {class:"btn ghost tiny", type:"button", text:"Undo", onclick:undo}));
   add(bar, h("button", {class:"btn ghost tiny", type:"button", text:"Redo", onclick:redo}));
   add(right, bar);
   add(right, seasonBar());
 
+  if (state.ui.tplPanel) add(right, templatePanel());
   if (state.ui.inspect) add(right, renderInspector());
 
   const plot = h("div", {class:"plot", style:{gridTemplateColumns:"repeat(" + state.plot.cols + ", max-content)"}});
@@ -3255,6 +3309,36 @@ function renderFarm(){
   add(zBox, h("p", {class:"lede", style:{margin:"10px 0 0"},
     text:"One honest caveat: the library holds researched Zone 7a timing and everything else is that timing shifted onto your frost dates. It gets you close. It does not know your soil temperature, your day length or which varieties you grow."}));
   add(host, zBox);
+
+  /* templates */
+  const tBox = h("div", {class:"panel", style:{marginBottom:"16px"}});
+  add(tBox, h("h3", {class:"sec-title", text:"Templates"}));
+  add(tBox, h("p", {class:"lede", style:{marginTop:0},
+    text:"Beds and whole plots you have saved, ready to put back into any layout. Applied from the Plan tab: whole plots from Fill Beds from Template, single beds from that bed's Edit panel."}));
+  const tpls = allTemplates();
+  tpls.forEach(function(t){
+    const row = h("div", {class:"tpl-row"});
+    add(row, h("div", {class:"body"},
+      h("div", null, h("b", {text:t.name}),
+        h("span", {class:"pill", style:{marginLeft:"6px"}, text:t.kind === "bed" ? "one bed" : "whole plot"}),
+        t.built ? h("span", {class:"pill", style:{marginLeft:"4px"}, text:"built in"}) : null),
+      h("div", {class:"per", text:t.beds.map(function(b){ return b.name + " " + b.cols + "x" + b.rows; })
+        .concat((t.containers || []).map(function(c){ return c.name; })).join(", ")}),
+      h("div", {class:"per", text:templateSize(t) + " plantings" + (t.created ? ", saved from " + t.created : "")})));
+    if (!t.built){
+      const nameIn = h("input", {class:"input-sm", value:t.name, "aria-label":"Name of " + t.name, style:{width:"150px"}});
+      add(row, nameIn);
+      add(row, h("button", {class:"btn ghost tiny", type:"button", text:"Rename", onclick:function(){
+        const v = nameIn.value.trim().slice(0, 40);
+        if (!v){ toast("Give the template a name"); return; }
+        snapshot(); t.name = v; persist(); render(); toast("Renamed to " + v);
+      }}));
+      add(row, h("button", {class:"btn ghost tiny", type:"button", text:"Delete",
+        onclick:function(){ deleteTemplate(t.id); }}));
+    }
+    add(tBox, row);
+  });
+  add(host, tBox);
 
   /* layouts */
   const lBox = h("div", {class:"panel"});
@@ -3847,6 +3931,195 @@ const ambience = {
   }
 };
 
+/* ---------- templates -------------------------------------------------------
+   A template is a bed, or a whole plot of beds, captured from a layout you made
+   and put back somewhere else. The hardcoded PLAN from the original brief is now
+   just the built in one, so nothing gets special treatment: it goes through the
+   same code as anything you save yourself.                                    */
+function tplId(){ return "tpl_" + Date.now() + "_" + Math.floor(Math.random() * 1000); }
+function templates(){ return state.farm.templates || (state.farm.templates = []); }
+
+function capturePlantings(bed){
+  return (bed.plantings || []).map(function(pl){
+    return {p:pl.p, i:pl.i, s:pl.s, e:pl.e, v:pl.v || null, dtm:pl.dtm || null};
+  });
+}
+function captureBed(bed, name){
+  return {id:tplId(), kind:"bed", name:name || bed.name, note:"", built:false,
+          created:new Date().getFullYear(),
+          beds:[{name:bed.name, cols:bed.cols, rows:bed.rows, plantings:capturePlantings(bed)}]};
+}
+function captureLayout(name){
+  const src = activeLayout();
+  const beds = src.beds.filter(function(b){ return (b.plantings || []).length; }).map(function(b){
+    return {name:b.name, cols:b.cols, rows:b.rows, plantings:capturePlantings(b)};
+  });
+  /* Pots are part of what is planted, so a plot template carries them too. */
+  const pots = src.containers.filter(function(c){ return !c.archived && (c.plantings || []).length; })
+    .map(function(c){ return {name:c.name, plantings:capturePlantings(c)}; });
+  return {id:tplId(), kind:"layout", name:name || (src.name + " as it stands"), note:"", built:false,
+          created:Number(src.year) || new Date().getFullYear(), beds:beds, containers:pots};
+}
+/* The brief that started all this, expressed as a template like any other. */
+function builtInTemplate(){
+  const beds = initialBeds().filter(function(b){ return PLAN[b.id]; });
+  beds.forEach(applyPlan);
+  const pot = initialContainers().filter(function(c){ return c.id === "c-broc"; })[0];
+  addPlanting(pot, 0, "broccoli");
+  return {id:"built-in-brief", kind:"layout", name:"The original six bed plan", built:true,
+          note:"Tomatoes east, three sisters west, cucumbers, peppers, strawberries, herbs, and a sunflower border.",
+          created:null,
+          beds:beds.map(function(b){
+            return {name:b.name, cols:b.cols, rows:b.rows, plantings:capturePlantings(b)};
+          }),
+          containers:[{name:pot.name, plantings:capturePlantings(pot)}]};
+}
+function allTemplates(){ return [builtInTemplate()].concat(templates()); }
+function templateById(id){
+  return allTemplates().filter(function(t){ return t.id === id; })[0] || null;
+}
+function templateSize(t){
+  const inBeds = t.beds.reduce(function(a, b){ return a + b.plantings.length; }, 0);
+  return inBeds + (t.containers || []).reduce(function(a, c){ return a + c.plantings.length; }, 0);
+}
+/* A bed pattern fits anywhere it is not too big for. */
+function fitsBed(tplBed, bed){ return tplBed.cols <= bed.cols && tplBed.rows <= bed.rows; }
+function bedTemplatesFor(bed){
+  return allTemplates().filter(function(t){
+    return t.kind === "bed" && fitsBed(t.beds[0], bed);
+  });
+}
+function applyBedPattern(tplBed, bed){
+  bed.plantings = [];
+  let skipped = 0;
+  tplBed.plantings.forEach(function(pl){
+    const r = Math.floor(pl.i / tplBed.cols), c = pl.i % tplBed.cols;
+    if (r >= bed.rows || c >= bed.cols){ skipped++; return; }
+    const idx = r * bed.cols + c;
+    if (!PLANT_MAP[pl.p]){ skipped++; return; }
+    const win = {s:pl.s, e:pl.e};
+    if (!canPlant(bed, idx, pl.p, win).ok){ skipped++; return; }
+    bed.plantings.push({id:"pl_" + Date.now() + "_" + Math.floor(Math.random() * 1e4),
+                        p:pl.p, i:idx, s:pl.s, e:pl.e, v:pl.v || null, dtm:pl.dtm || null, a:{}});
+  });
+  return skipped;
+}
+/* Beds are matched by name first, then by size, so a template made on one plot
+   lands sensibly on another that is laid out differently. */
+function applyTemplate(t, targetBed){
+  if (!t) return {ok:false, why:"That template has gone."};
+  if (targetBed){
+    const skipped = applyBedPattern(t.beds[0], targetBed);
+    return {ok:true, beds:1, skipped:skipped, missed:[]};
+  }
+  const used = {};
+  const missed = [];
+  let filled = 0, skipped = 0;
+  t.beds.forEach(function(tb){
+    let target = state.beds.filter(function(b){ return !used[b.id] && b.name === tb.name; })[0];
+    if (!target) target = state.beds.filter(function(b){
+      return !used[b.id] && b.cols === tb.cols && b.rows === tb.rows;
+    })[0];
+    if (!target) target = state.beds.filter(function(b){ return !used[b.id] && fitsBed(tb, b); })[0];
+    if (!target){ missed.push(tb.name); return; }
+    used[target.id] = true;
+    skipped += applyBedPattern(tb, target);
+    filled++;
+  });
+  let pots = 0;
+  (t.containers || []).forEach(function(tc){
+    let target = state.containers.filter(function(c){ return !c.archived && !used[c.id] && c.name === tc.name; })[0];
+    if (!target) target = state.containers.filter(function(c){ return !c.archived && !used[c.id] && !(c.plantings || []).length; })[0];
+    if (!target){ missed.push(tc.name); return; }
+    used[target.id] = true;
+    target.cols = 1; target.rows = 1;
+    skipped += applyBedPattern({cols:1, rows:1, plantings:tc.plantings}, target);
+    pots++;
+  });
+  return {ok:true, beds:filled, pots:pots, skipped:skipped, missed:missed};
+}
+function templateReport(res, name){
+  let msg = name + ": " + res.beds + " bed" + (res.beds === 1 ? "" : "s") + " filled";
+  if (res.pots) msg += " and " + res.pots + " pot" + (res.pots === 1 ? "" : "s");
+  if (res.skipped) msg += ", " + res.skipped + " planting" + (res.skipped === 1 ? "" : "s") + " did not fit";
+  if (res.missed.length) msg += ", nowhere to put " + res.missed.join(" or ");
+  return msg;
+}
+function saveTemplate(t){
+  snapshot();
+  templates().push(t);
+  persist();
+  render();
+  toast("Saved template: " + t.name);
+}
+function deleteTemplate(id){
+  const t = templateById(id);
+  if (!t || t.built) return;
+  snapshot();
+  state.farm.templates = templates().filter(function(x){ return x.id !== id; });
+  persist();
+  render();
+  toast(t.name + " deleted. Ctrl+Z puts it back.");
+}
+
+/* ---------- the chooser ------------------------------------------------------ */
+function templatePanel(){
+  const box = h("div", {class:"panel inspector", id:"template-panel", tabindex:"-1",
+                        "aria-label":"Templates"});
+  add(box, h("div", {class:"row"},
+    h("h3", {class:"sec-title", style:{margin:0, flex:"1 1 auto"}, text:"Fill beds from a template"}),
+    h("button", {class:"btn ghost tiny", type:"button", text:"Close",
+      onclick:function(){ state.ui.tplPanel = false; renderPlanner(); }})));
+  const layouts = allTemplates().filter(function(t){ return t.kind === "layout"; });
+  if (!layouts.length) add(box, h("p", {class:"lede", style:{margin:"4px 0"},
+    text:"No whole plot templates yet. Lay a garden out and save it below."}));
+  layouts.forEach(function(t){
+    const row = h("div", {class:"tpl-row"});
+    add(row, h("div", {class:"body"},
+      h("div", null, h("b", {text:t.name}), t.built ? h("span", {class:"pill", style:{marginLeft:"6px"}, text:"built in"}) : null),
+      h("div", {class:"per", text:t.beds.length + " bed" + (t.beds.length === 1 ? "" : "s") +
+        ((t.containers || []).length ? " and " + t.containers.length + " pot" + (t.containers.length === 1 ? "" : "s") : "") + ", " +
+        templateSize(t) + " plantings" + (t.created ? ", from " + t.created : "")}),
+      t.note ? h("div", {class:"per", text:t.note}) : null));
+    add(row, h("button", {class:"btn tiny", type:"button", text:"Fill beds", onclick:function(){
+      snapshot();
+      const res = applyTemplate(t);
+      persist(); render();
+      toast(templateReport(res, t.name));
+    }}));
+    if (!t.built) add(row, h("button", {class:"btn ghost tiny", type:"button", text:"Delete",
+      onclick:function(){ deleteTemplate(t.id); }}));
+    add(box, row);
+  });
+  const beds = allTemplates().filter(function(t){ return t.kind === "bed"; });
+  if (beds.length){
+    add(box, h("h3", {class:"sec-title", style:{marginTop:"12px"}, text:"Single bed patterns"}));
+    add(box, h("p", {class:"lede", style:{margin:"0 0 6px"},
+      text:"These are applied from a bed's own Edit panel, where they can be put in the bed you mean."}));
+    beds.forEach(function(t){
+      add(box, h("div", {class:"tpl-row"},
+        h("div", {class:"body"},
+          h("b", {text:t.name}),
+          h("div", {class:"per", text:t.beds[0].cols + " by " + t.beds[0].rows + ", " +
+            templateSize(t) + " plantings" + (t.created ? ", from " + t.created : "")})),
+        h("button", {class:"btn ghost tiny", type:"button", text:"Delete",
+          onclick:function(){ deleteTemplate(t.id); }})));
+    });
+  }
+  add(box, h("h3", {class:"sec-title", style:{marginTop:"12px"}, text:"Save what is planted now"}));
+  const nameIn = h("input", {class:"input-sm", placeholder:"Template name", "aria-label":"Template name",
+                             style:{flex:"1 1 180px"}});
+  add(box, h("div", {class:"row"}, nameIn,
+    h("button", {class:"btn tiny", type:"button", text:"Save this plot as a template", onclick:function(){
+      const t = captureLayout(nameIn.value.trim().slice(0, 40) || null);
+      if (!t.beds.length){ toast("Nothing is planted, so there is nothing to save."); return; }
+      saveTemplate(t);
+    }})));
+  add(box, h("p", {class:"lede", style:{margin:"6px 0 0"},
+    text:"A template holds the crops, their dates and their varieties, not the beds themselves. Putting it back matches beds by name first, then by size, so it works on a plot laid out differently."}));
+  return box;
+}
+
 /* ---------- about, self test, housekeeping -------------------------------- */
 /* Point this at the repo once it exists. It is the only outbound link in the app. */
 const REPO_URL = "https://github.com/mbparks";
@@ -4098,6 +4371,57 @@ function selfTest(){
       return o && o < 0.6;
     }).length;
     return faded ? faded + " rows are faded below six tenths" : true;
+  });
+  t("No two controls in one panel carry the same label", function(){
+    /* A bed's editor had two buttons reading Apply, one for its size and one for
+       a template. Whichever you meant, you had a coin flip. */
+    const held = state.ui.editing;
+    const bed = state.beds.filter(inPlot)[0];
+    if (!bed) return true;
+    state.ui.editing = bed.id;
+    renderPlanner();
+    const panel = document.querySelector(".bed-editor");
+    state.ui.editing = held;
+    renderPlanner();
+    if (!panel) return true;
+    const seen = {}, dupes = [];
+    Array.prototype.forEach.call(panel.querySelectorAll("button"), function(b){
+      const label = (b.textContent || "").trim();
+      if (!label || label.length < 3) return;      /* the arrow pad is not a label */
+      if (seen[label] && dupes.indexOf(label) < 0) dupes.push(label);
+      seen[label] = true;
+    });
+    return dupes.length ? "two controls both read " + dupes.join(" and ") : true;
+  });
+  t("A template survives being taken out and put back", function(){
+    const held = JSON.stringify(state.farm.templates || []);
+    const bed = {id:"probe", name:"Probe", cols:3, rows:3, kind:"bed", depth:6, plantings:[]};
+    addPlanting(bed, 0, "basil");
+    addPlanting(bed, 8, "thyme");
+    const before = bed.plantings.map(function(pl){ return pl.p + "@" + pl.i + ":" + pl.s; }).sort().join(",");
+    const t = captureBed(bed, "Probe pattern");
+    const empty = {id:"probe2", name:"Probe two", cols:3, rows:3, kind:"bed", depth:6, plantings:[]};
+    const res = applyTemplate(t, empty);
+    const after = empty.plantings.map(function(pl){ return pl.p + "@" + pl.i + ":" + pl.s; }).sort().join(",");
+    state.farm.templates = JSON.parse(held);
+    if (res.skipped) return res.skipped + " plantings were dropped putting it back";
+    if (before !== after) return "it came back different: " + before + " against " + after;
+    /* And a pattern too big for its bed keeps what fits rather than refusing. */
+    const small = {id:"probe3", name:"Small", cols:2, rows:2, kind:"bed", depth:6, plantings:[]};
+    const res2 = applyTemplate(t, small);
+    return (small.plantings.length === 1 && res2.skipped === 1)
+      ? true : "a big pattern in a small bed kept " + small.plantings.length + " and skipped " + res2.skipped;
+  });
+  t("The built in template is the old hardcoded brief, and cannot be deleted", function(){
+    const t = builtInTemplate();
+    if (!t.built) return "the built in template is not marked as built in";
+    /* 124 in the beds and the broccoli in its pot. */
+    if (templateSize(t) !== 125) return "the brief now lays " + templateSize(t) + " plantings rather than 125";
+    if (!(t.containers || []).length) return "the brief lost its broccoli pot";
+    const held = (state.farm.templates || []).length;
+    deleteTemplate("built-in-brief");
+    if (!templateById("built-in-brief")) return "it was deleted";
+    return (state.farm.templates || []).length === held ? true : "deleting it disturbed the saved ones";
   });
   t("The background life stays in the background", function(){
     const layer = document.getElementById("ambience");
@@ -4848,6 +5172,7 @@ function renderAbout(){
   add(panel, h("h3", {class:"sec-title", text:"What it checks"}));
   add(panel, h("ul", {style:{margin:"0 0 10px 18px", padding:0, fontSize:"13.5px"}},
     h("li", {text:"Companions and conflicts, read both ways, with neighbours flagged harder than bed mates."}),
+    h("li", {text:"Templates: save a bed or a whole plot and put it back into any layout, matched by name then by size."}),
     h("li", {text:"What is due this week, read off the plantings, with a button that writes the date into the journal."}),
     h("li", {text:"What seed to order: squares times density, divided by how likely the packet is to come up, minus what is already in the box."}),
     h("li", {text:"How much lands each week against what the household eats fresh, so a glut or a hungry gap shows up in February rather than August."}),

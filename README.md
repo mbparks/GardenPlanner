@@ -3,7 +3,26 @@
 A square foot garden planner that runs from one HTML file. No build step, no
 server, no account. Double click it and it works, on disk, offline, forever.
 
-Version 2.5.0 :: GPL-3.0
+Version 2.8.0 :: GPL-3.0
+
+## Getting around
+
+Seven tabs, each with one job.
+
+- **Plan** is the map: beds, squares, containers, the season scrubber. Occasional
+  controls (plot shape, printing, clearing) are folded behind one disclosure so
+  the map is the thing you see.
+- **Do** is the two derived lists: what is due, and what seed to order. Both
+  carry a count on the switcher, so the tab shows both jobs without changing view.
+- **Season** is the three year-long views: crop timing, bed by bed, harvest load.
+- **Record** is the journal.
+- **Plants** is the library.
+- **Farm** is the zone, frost dates, layouts and appearance.
+- **About** is the version, the license, the limitations and the self test.
+
+Two interface rules hold throughout, and the self test enforces them: a choice
+between several things is a segmented control with exactly one option marked on,
+and an on or off is a single button that fills in when it is pressed.
 
 ## What it does
 
@@ -93,7 +112,7 @@ Drag across squares to paint a run. Nothing needs a mouse.
 
 ## Bench checks
 
-The About tab runs 73 assertions on demand, covering the plant data, the season
+The About tab runs 86 assertions on demand, covering the plant data, the season
 model, footprints, shade, rotation, the zone projection, import validation and
 the migration paths. Run it after any edit.
 
@@ -140,6 +159,43 @@ with a carved face. Pea, radish and beet were coloured circles. Oregano was a
 jar, zucchini a potted plant, borage and lavender were hearts. The emoji set is
 still there behind a switch on the Farm tab, which shows both sets side by side
 so you can see what you are choosing between.
+
+## Building
+
+`build.sh` concatenates the source files, reads the version out of `APP` in
+js1.js, and stamps it into the marker comment and the CSS header. It refuses to
+finish if a version slot goes unstamped. The version now lives in exactly one
+place, and one of the self tests reads the marker comment back out of the running
+document and fails if it disagrees with what the app reports.
+
+## Templates
+
+Save a bed, or a whole plot, and put it back into any layout.
+
+- **Fill Beds from Template** on the Plan tab opens the chooser: apply a whole
+  plot template, or save what is planted right now as one.
+- A bed's **Edit** panel offers any saved pattern small enough to fit that bed,
+  and can save that bed as a pattern.
+- The **Farm** tab lists them all for renaming and deleting.
+
+A template holds crops, dates, varieties and days to maturity, not the beds
+themselves, so it lands on a plot laid out differently: beds are matched by name
+first, then by size, then by anything the pattern fits inside. A pattern too big
+for its bed keeps what fits and tells you what did not. Containers travel too.
+
+The original six bed brief is now the built in template rather than a hardcoded
+button. It goes through exactly the same code as anything you save, and it is the
+only one that cannot be deleted.
+
+## Life in the background
+
+Birds, bees, butterflies and a dragonfly drift behind the light themes; lightning
+bugs blink behind the dark one. All drawn inline like the plant marks, nothing
+fetched, about 3 kB. It is decoration and behaves like it: under the content,
+deaf to the mouse, hidden from screen readers, absent from the high contrast
+theme and from anything you print, and gone entirely when the system asks for
+reduced motion. It also stops when the tab is not being looked at. Switch is on
+the Farm tab.
 
 ## Contrast
 

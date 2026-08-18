@@ -3,7 +3,7 @@
 A square foot garden planner that runs from one HTML file. No build step, no
 server, no account. Double click it and it works, on disk, offline, forever.
 
-Version 2.8.0 :: GPL-3.0
+Version 2.9.0 :: GPL-3.0
 
 ## Getting around
 
@@ -112,7 +112,7 @@ Drag across squares to paint a run. Nothing needs a mouse.
 
 ## Bench checks
 
-The About tab runs 86 assertions on demand, covering the plant data, the season
+The About tab runs 89 assertions on demand, covering the plant data, the season
 model, footprints, shade, rotation, the zone projection, import validation and
 the migration paths. Run it after any edit.
 
@@ -167,6 +167,21 @@ js1.js, and stamps it into the marker comment and the CSS header. It refuses to
 finish if a version slot goes unstamped. The version now lives in exactly one
 place, and one of the self tests reads the marker comment back out of the running
 document and fails if it disagrees with what the app reports.
+
+## The report
+
+**Export a report** on the Farm tab, or in the Plan tab's plot panel, or Ctrl+P.
+It builds a document of the whole layout: a cover with the arithmetic, the plot
+drawn square by square, every bed with its plantings and soil figures, the
+planting calendar, what each square does across the year, the harvest load, the
+year's work in order, the seed order, the record, and a tail piece listing the
+other layouts and templates. Any section can be dropped before printing.
+
+There is no PDF library in here and there could not be: a file running from a
+disk cannot fetch one. Instead the report is a real document that the browser's
+own print engine turns into a PDF through Save as PDF, which gives selectable
+vector type rather than a picture of a page. Paper size and margins come from the
+print dialog. Printing forces ink on white whatever theme the screen was in.
 
 ## Templates
 

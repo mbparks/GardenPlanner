@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Garden Planner :: garden-planner.html :: v2.8.0 -->
+<!-- Garden Planner :: garden-planner.html :: v2.9.0 -->
 <html lang="en" data-theme="garden">
 <head>
 <meta charset="utf-8">
@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600&family=DM+Sans:wght@300;400;500&display=swap">
 <style>
-/* Garden Planner v2.8.0. Fonts are additive only: the local stacks below carry the
+/* Garden Planner v2.9.0. Fonts are additive only: the local stacks below carry the
    design if the remote sheet never loads (offline, file:// use). */
 :root{
   --font-display:"Lora","Iowan Old Style",Georgia,"Times New Roman",serif;
@@ -289,7 +289,7 @@ main{max-width:1180px;margin:0 auto;padding:20px 16px 60px}
 @keyframes flap{from{transform:scaleY(1)}to{transform:scaleY(.35)}}
 .topbar,main,#tooltip,#toast{position:relative;z-index:1}
 @media (prefers-reduced-motion:reduce){#ambience{display:none}}
-@media print{#ambience{display:none!important}}
+
 
 /* season scrubber */
 .season{margin-bottom:12px}
@@ -327,15 +327,6 @@ textarea.input-sm{font-size:13px;line-height:1.4}
   .bed{padding:9px}
   .plot{gap:9px}
   .lib-row{font-size:12px}
-}
-@media print{
-  .topbar,.hdr-actions,.palette,.plot-controls,.season,.bed-editor,.inspector,.btn,.open-cell{display:none!important}
-  body{background:#fff;color:#000}
-  .planner{display:block}
-  .plot{display:block}
-  .bed{break-inside:avoid;page-break-inside:avoid;margin-bottom:14px;box-shadow:none;border:1px solid #999}
-  .sq{border-color:#999!important;background:#fff!important}
-  .note{border:1px solid #999}
 }
 
 /* this week */
@@ -375,8 +366,82 @@ textarea.input-sm{font-size:13px;line-height:1.4}
 .load-axis{display:grid;grid-template-columns:repeat(12,1fr);font-size:9px;color:var(--muted);
   text-transform:uppercase;letter-spacing:.04em;margin-top:2px}
 .load-axis span{text-align:center}
+
+/* ---------- the report ------------------------------------------------------
+   On screen it is a preview on a grey desk. On paper it is the only thing that
+   exists: the app's own chrome is hidden and the theme is overridden to ink on
+   white, because a garden journal printed in a dark theme is a cartridge you do
+   not get back. */
+.report-mode{position:fixed;inset:0;z-index:60;background:#8e8b83;overflow:auto;padding:0 0 60px}
+.report-bar{position:sticky;top:0;z-index:2;display:flex;gap:10px;align-items:center;flex-wrap:wrap;
+  padding:10px 16px;background:var(--panel);border-bottom:1px solid var(--line-strong)}
+.report-opts{top:52px;gap:6px}
+.report-page{max-width:860px;margin:22px auto;background:#fff;color:#1a1a1a;
+  box-shadow:0 6px 30px rgba(0,0,0,.35);padding:28px 34px}
+.report{font-family:var(--font-body);font-size:12px;line-height:1.45;color:#1a1a1a}
+.report h1{font-family:var(--font-display);font-size:34px;margin:0 0 4px;color:#1a1a1a}
+.report h2{font-family:var(--font-display);font-size:19px;margin:0;color:#1a1a1a}
+.report h3{font-family:var(--font-display);font-size:14px;margin:14px 0 6px;display:flex;
+  justify-content:space-between;align-items:baseline;gap:10px;color:#1a1a1a}
+.r-eyebrow{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#6b6656;margin:0 0 6px}
+.r-lede{font-size:15px;color:#4a4638;margin:0 0 14px}
+.r-sub{font-size:11px;color:#6b6656;margin:2px 0 0}
+.r-dim{font-size:10px;color:#6b6656;font-weight:400;font-family:var(--font-body)}
+.r-head{border-bottom:1.5px solid #1a1a1a;padding-bottom:6px;margin-bottom:12px}
+.r-section{margin-bottom:26px}
+.r-marks{display:flex;gap:14px;margin:16px 0 20px;opacity:.85}
+.r-foot{font-size:10px;color:#6b6656;margin-top:18px;border-top:1px solid #ccc7b8;padding-top:6px}
+.r-note{font-size:11px;color:#4a4638;margin:4px 0 0;padding-left:10px;border-left:2px solid #b8b2a0}
+.r-block{margin-bottom:16px}
+.r-block-head{font-family:var(--font-display);font-size:13px;margin:14px 0 4px}
+.r-table{width:100%;border-collapse:collapse;font-size:11px;margin-top:4px}
+.r-table th{text-align:left;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#6b6656;
+  border-bottom:1px solid #1a1a1a;padding:4px 6px 3px}
+.r-table td{padding:3px 6px;border-bottom:1px solid #e2ded2;vertical-align:top}
+.r-facts th{display:none}
+.r-facts td:first-child{width:96px;color:#6b6656;font-size:9px;letter-spacing:.1em;text-transform:uppercase;
+  padding-top:5px}
+.r-plot{display:grid;gap:10px;margin-top:8px}
+.r-open{border:1px dashed #c4bfae;border-radius:6px;min-height:56px;display:flex;align-items:center;
+  justify-content:center;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#8d8877}
+.r-bed{border:1px solid #b8b2a0;border-radius:6px;padding:8px}
+.r-grid{display:grid;gap:2px;margin-top:6px}
+.r-sq{border:1px solid #d8d3c4;border-radius:3px;min-height:34px;padding:2px;display:flex;
+  flex-direction:column;align-items:center;justify-content:center;gap:1px;text-align:center;position:relative}
+.r-sq.held{border-style:dashed;background:#f6f4ee}
+.r-sq-name{font-size:7px;line-height:1.05;color:#4a4638;overflow:hidden}
+.r-sq-more{position:absolute;right:2px;bottom:1px;font-size:6px;color:#8d8877}
+.r-border-head{margin-top:14px}
+body.reporting{overflow:hidden}
+body.reporting .topbar,body.reporting main,body.reporting #ambience,body.reporting #toast{display:none}
+
+@media print{
+  /* ink on white, whatever theme the screen was in. One print block, so there is
+     one place to look when a page comes out wrong. */
+  .topbar,.hdr-actions,.palette,.plot-controls,.season,.bed-editor,.inspector,.open-cell,
+  .report-bar,#ambience,#toast,.tabs{display:none!important}
+  .planner,.plot{display:block}
+  .bed{break-inside:avoid;page-break-inside:avoid;margin-bottom:14px;box-shadow:none;border:1px solid #999}
+  :root[data-theme]{--bg:#fff;--panel:#fff;--panel-2:#fff;--soil:#fff;--ink:#1a1a1a;--muted:#5f5a4c;
+    --line:#ddd8ca;--line-strong:#9a9482;--accent:#2f5130;--accent-ink:#fff;
+    --good:#1a6b3c;--good-bg:#fff;--bad:#a8321f;--bad-bg:#fff;--warn:#775a15;--warn-bg:#fff;
+    --frost:#5b8fc4;--indoor:#4a86bd;--transplant:#4e9668;--direct:#2f7a44;--harvest:#bf7d1a}
+  @page{margin:16mm}
+  html,body{background:#fff}
+  .report-mode{position:static;background:#fff;padding:0;overflow:visible}
+  .report-bar{display:none}
+  .report-page{max-width:none;margin:0;padding:0;box-shadow:none}
+  .r-section{break-before:page;page-break-before:always;margin:0 0 20px}
+  .r-cover{break-before:auto;page-break-before:auto}
+  .r-block,.r-bed,.r-table tr,.cal-row,.load-chart{break-inside:avoid;page-break-inside:avoid}
+  .r-table thead{display:table-header-group}
+  .r-head{break-after:avoid;page-break-after:avoid}
+  .report{font-size:10.5px}
+  .r-sq{min-height:30px}
+  .cal-track{height:18px}
+  .cal-bar{height:4px}
+}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
-@media print{.topbar,.hdr-actions,.palette,.btn{display:none!important} body{background:#fff}}
 </style>
 </head>
 <body>
@@ -402,8 +467,8 @@ textarea.input-sm{font-size:13px;line-height:1.4}
 <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
 <script>
 "use strict";
-/* Garden Planner v2.8.0. Single file, no build step, no server, GPL-3.0. */
-const APP = { name: "Garden Planner", file: "garden-planner.html", version: "2.8.0", schema: 6 };
+/* Garden Planner v2.9.0. Single file, no build step, no server, GPL-3.0. */
+const APP = { name: "Garden Planner", file: "garden-planner.html", version: "2.9.0", schema: 6 };
 
 /* ---------- plant library -------------------------------------------------
    per   = plants per square foot (Square Foot Gardening densities)
@@ -2836,8 +2901,8 @@ function renderPlanner(){
     const box = h("div");
     add(box, plotControls());
     add(box, h("div", {class:"row", style:{marginTop:"8px"}},
-      h("button", {class:"btn ghost tiny", type:"button", text:"Print this plan",
-        onclick:function(){ window.print(); }}),
+      h("button", {class:"btn tiny", type:"button", text:"Export a report",
+        onclick:openReport}),
       h("button", {class:"btn ghost tiny", type:"button", text:"Copy this layout",
         onclick:function(){ duplicateLayout(state.activeId); }}),
       h("button", {class:"btn ghost tiny", type:"button", text:"Layouts, zone and frost dates",
@@ -3212,6 +3277,11 @@ function renderFarm(){
         "Emoji", sample(true))),
     h("span", {class:"lede", style:{margin:0},
       text:"The drawn marks are in this file and look the same everywhere. Emoji come from your system, and Unicode has no character at all for a squash."})));
+  add(idBox, h("h3", {class:"sec-title", style:{marginTop:"14px"}, text:"Report"}));
+  add(idBox, h("div", {class:"row"},
+    h("button", {class:"btn tiny", type:"button", text:"Export a report", onclick:openReport}),
+    h("span", {class:"lede", style:{margin:0},
+      text:"Everything in this layout laid out as a document: the plot, every bed, the calendar, the year's work, the seed order and the record. Print it, or choose Save as PDF in the print dialog."})));
   add(idBox, h("h3", {class:"sec-title", style:{marginTop:"14px"}, text:"Life in the background"}));
   add(idBox, h("div", {class:"row"},
     segmented([["on", "On"], ["off", "Off"]], state.ui.ambience === false ? "off" : "on",
@@ -4120,6 +4190,337 @@ function templatePanel(){
   return box;
 }
 
+/* ---------- the report ------------------------------------------------------
+   Everything the farm knows, laid out as a document and handed to the browser's
+   own print engine, where Save as PDF lives. No library is vendored for this and
+   none could be: the file has to run from a disk with no network. Printing gives
+   real vector type, selectable text, and a PDF that does not weigh ten megabytes
+   because someone rasterised a page.                                          */
+const REPORT_SECTIONS = [
+  ["map", "The plot"],
+  ["beds", "Bed by bed"],
+  ["calendar", "Planting calendar"],
+  ["occupancy", "What each square does"],
+  ["harvest", "Harvest load"],
+  ["tasks", "The year's work"],
+  ["seeds", "Seed order"],
+  ["journal", "The record"]
+];
+function reportWants(key){
+  const off = state.ui.reportOff || {};
+  return !off[key];
+}
+function rTitle(text, sub){
+  return h("header", {class:"r-head"},
+    h("h2", {text:text}),
+    sub ? h("p", {class:"r-sub", text:sub}) : null);
+}
+function rTable(head, rows, cls){
+  const t = h("table", {class:"r-table " + (cls || "")});
+  const thead = h("thead");
+  const hr = h("tr");
+  head.forEach(function(c){ add(hr, h("th", {text:c})); });
+  add(thead, hr);
+  add(t, thead);
+  const tb = h("tbody");
+  rows.forEach(function(r){
+    const tr = h("tr");
+    r.forEach(function(c){
+      add(tr, h("td", null, (c && c.nodeType) ? c : h("span", {text:c === null || c === undefined ? "" : String(c)})));
+    });
+    add(tb, tr);
+  });
+  add(t, tb);
+  return t;
+}
+function reportBedGrid(bed){
+  const cells = bedCellsAt(bed, null);
+  const grid = h("div", {class:"r-grid",
+    style:{gridTemplateColumns:"repeat(" + bed.cols + ", 1fr)"}});
+  cells.forEach(function(cell, idx){
+    const p = cell ? PLANT_MAP[cell.p] : null;
+    const held = !!(cell && !cell.anchor);
+    const sq = h("div", {class:"r-sq" + (held ? " held" : ""), style:p ? {borderColor:p.color} : null});
+    if (p && !held){
+      add(sq, glyph(p, "13px"));
+      add(sq, h("span", {class:"r-sq-name", text:p.name}));
+      if (cell.more) add(sq, h("span", {class:"r-sq-more", text:"+" + cell.more}));
+    }
+    add(grid, sq);
+  });
+  return grid;
+}
+function buildReport(){
+  const l = activeLayout();
+  const f = farmFrost();
+  const doc = h("div", {class:"report", id:"report"});
+
+  /* Cover */
+  const cover = h("section", {class:"r-section r-cover"});
+  add(cover, h("p", {class:"r-eyebrow", text:"Garden report"}));
+  add(cover, h("h1", {text:state.farm.name}));
+  add(cover, h("p", {class:"r-lede", text:l.name + (l.year ? ", " + l.year : "")}));
+  const marks = h("div", {class:"r-marks"});
+  ["tomato", "bean", "carrot", "squash", "strawberry", "lavender"].forEach(function(id){
+    add(marks, glyph(PLANT_MAP[id], "30px"));
+  });
+  add(cover, marks);
+  const t = tally();
+  const live = tally(state.ui.day);
+  const squares = state.beds.reduce(function(a, b){ return a + bedCellsAt(b, null).filter(Boolean).length; }, 0);
+  const beds = state.beds.filter(inPlot).length;
+  const plantings = state.beds.reduce(function(a, b){ return a + (b.plantings || []).length; }, 0) +
+    state.containers.reduce(function(a, c){ return a + (c.archived ? 0 : (c.plantings || []).length); }, 0);
+  const plants = Object.keys(t).reduce(function(a, k){ return a + t[k].plants; }, 0);
+  const soil = state.beds.reduce(function(a, b){ return a + bedVolume(b).cuft; }, 0);
+  const water = state.beds.reduce(function(a, b){ return a + bedVolume(b).gallonsPerWeek; }, 0);
+  add(cover, rTable(["", ""], [
+    ["Zone", state.farm.zone + (state.farm.custom ? ", with your own frost dates" : ", typical dates")],
+    ["Frost", frostFree() ? "frost free" : (fmtDate(f.last) + " to " + fmtDate(f.first) + ", " + seasonDays() + " frost free days")],
+    ["Beds", beds + " on a " + state.plot.rows + " by " + state.plot.cols + " plot, " +
+             state.containers.filter(function(c){ return !c.archived; }).length + " containers"],
+    ["Planted", plantings + " plantings across " + squares + " square feet, about " + plants + " plants"],
+    ["Kinds", Object.keys(t).length + " crops from " +
+      Object.keys(t).reduce(function(acc, k){
+        const fam = familyOf(k);
+        if (acc.indexOf(fam) < 0) acc.push(fam);
+        return acc;
+      }, []).length + " families"],
+    ["Soil", Math.round(soil) + " cubic feet of mix, about " + Math.round(water) + " gallons a week in the heat"],
+    ["Drawn", new Date().toDateString()]
+  ], "r-facts"));
+  add(cover, h("p", {class:"r-foot",
+    text:APP.name + " v" + APP.version + " \u00b7 GPL-3.0 \u00b7 every figure here is worked out from your own plan"}));
+  add(doc, cover);
+
+  /* The plot */
+  if (reportWants("map")){
+    const sec = h("section", {class:"r-section"});
+    add(sec, rTitle("The plot", "North is up. Each square shows its first crop of the year, with a count for anything following."));
+    const plot = h("div", {class:"r-plot", style:{gridTemplateColumns:"repeat(" + state.plot.cols + ", 1fr)"}});
+    state.plot.slots.forEach(function(id){
+      const bed = id ? bedById(id) : null;
+      if (!bed){ add(plot, h("div", {class:"r-open", text:"open ground"})); return; }
+      const box = h("div", {class:"r-bed"});
+      add(box, h("h3", null, h("span", {text:bed.name}),
+        h("span", {class:"r-dim", text:bed.cols + " by " + bed.rows + " ft"})));
+      if (bed.crop) add(box, h("p", {class:"r-sub", text:bed.crop}));
+      add(box, reportBedGrid(bed));
+      add(plot, box);
+    });
+    add(sec, plot);
+    const border = bedById("border");
+    if (border){
+      add(sec, h("h3", {class:"r-border-head", text:border.name}));
+      add(sec, reportBedGrid(border));
+    }
+    add(doc, sec);
+  }
+
+  /* Bed by bed */
+  if (reportWants("beds")){
+    const sec = h("section", {class:"r-section"});
+    add(sec, rTitle("Bed by bed", "Every planting, where it sits and how long it holds the ground."));
+    state.beds.concat(state.containers.filter(function(c){ return !c.archived; })).forEach(function(bed){
+      const pl = (bed.plantings || []).slice().sort(function(a, b){ return a.s - b.s || a.i - b.i; });
+      if (!pl.length) return;
+      const block = h("div", {class:"r-block"});
+      const v = bedVolume(bed.cols ? bed : {cols:1, rows:1, depth:bed.depth});
+      add(block, h("h3", null, h("span", {text:bed.name}),
+        h("span", {class:"r-dim", text:bed.kind === "container" ? (bed.size || "container")
+          : (bed.cols + " by " + bed.rows + " ft, " + v.cuft.toFixed(1) + " cu ft of mix, " +
+             Math.round(v.gallonsPerWeek) + " gal a week")})));
+      add(block, rTable(["Square", "Crop", "Variety", "In the ground", "Days"],
+        pl.map(function(p){
+          const where = bed.kind === "container" ? "pot"
+            : "r" + (Math.floor(p.i / bed.cols) + 1) + " c" + (p.i % bed.cols + 1);
+          return [where, plantName(p.p), p.v || "", windowText(p), p.dtm || ""];
+        })));
+      const notes = placementWarnings(bed).concat(
+        bedConflicts(bed, null).near.map(function(x){ return "Next to each other: " + x; }),
+        bedConflicts(bed, null).far.map(function(x){ return "Sharing the bed: " + x; }),
+        shadeWarnings(bed, null), plotShadeWarnings(bed, null), rotationWarnings(bed));
+      notes.forEach(function(n){ add(block, h("p", {class:"r-note", text:n})); });
+      add(sec, block);
+    });
+    add(doc, sec);
+  }
+
+  /* Calendar, occupancy and load, reusing the same drawing the app uses */
+  if (reportWants("calendar")){
+    const sec = h("section", {class:"r-section r-wide"});
+    add(sec, rTitle("Planting calendar",
+      "Zone " + state.farm.zone + " timing projected onto your frost dates. Blue is under lights, pale green is planting out, dark green is direct sowing, gold is picking. The pale bands are the frost shoulders."));
+    const head = h("div", {class:"cal-row"});
+    add(head, h("div"));
+    const hm = h("div", {style:{display:"grid", gridTemplateColumns:"repeat(12,1fr)"}});
+    MONTHS.forEach(function(m){ add(hm, h("div", {class:"cal-head", text:m})); });
+    add(head, hm);
+    add(sec, head);
+    const planted = tally();
+    allPlants().filter(function(p){ return !p.archived && planted[p.id]; }).forEach(function(p){
+      const row = h("div", {class:"cal-row mine"});
+      add(row, h("div", {class:"cal-name"}, glyph(p, "13px"), h("span", {class:"nm", text:p.name})));
+      add(row, calTrack(p));
+      add(sec, row);
+    });
+    add(doc, sec);
+  }
+  if (reportWants("occupancy")){
+    const sec = h("section", {class:"r-section r-wide"});
+    add(sec, rTitle("What each square does", "Every square across the year. The gaps are where another sowing would fit."));
+    state.beds.forEach(function(bed){
+      if (!(bed.plantings || []).length) return;
+      add(sec, h("h3", {class:"r-block-head", text:bed.name}));
+      for (let idx = 0; idx < bed.cols * bed.rows; idx++){
+        const covering = plantingsCovering(bed, idx);
+        const row = h("div", {class:"cal-row"});
+        add(row, h("div", {class:"cal-name", style:{fontSize:"9px"},
+          text:"r" + (Math.floor(idx / bed.cols) + 1) + " c" + (idx % bed.cols + 1)}));
+        const track = h("div", {class:"cal-track gantt"});
+        covering.forEach(function(pl){
+          const p = PLANT_MAP[pl.p];
+          windowSegs(pl).forEach(function(seg){
+            const bar = h("div", {class:"gantt-bar",
+              style:{left:((seg[0] - 1) / 365 * 100) + "%", width:Math.max(0.8, (seg[1] - seg[0]) / 365 * 100) + "%",
+                     background:(p ? p.color : "#888")}});
+            add(bar, h("span", {text:p ? p.name : pl.p}));
+            add(track, bar);
+          });
+        });
+        add(row, track);
+        add(sec, row);
+      }
+    });
+    add(doc, sec);
+  }
+  if (reportWants("harvest")){
+    const res = harvestNotes();
+    const sec = h("section", {class:"r-section r-wide"});
+    add(sec, rTitle("Harvest load",
+      "Rough pounds ripening each week against about " + res.capacity + " lb, what " + res.people + " " +
+      (res.people === 1 ? "person eats" : "people eat") + " fresh. Yields are ballpark figures per square foot, not a promise."));
+    const peak = Math.max.apply(null, res.curve.weeks.concat([res.capacity]));
+    const chart = h("div", {class:"load-chart",
+      style:{"--capacity":Math.min(96, res.capacity / Math.max(1, peak) * 100) + "%"}});
+    res.curve.weeks.forEach(function(lb){
+      const col = h("div", {class:"load-col" + (lb > res.capacity * 1.5 ? " glut" : "")});
+      add(col, h("i", {style:{height:Math.round(lb / Math.max(1, peak) * 100) + "%"}}));
+      add(chart, col);
+    });
+    add(sec, chart);
+    const axis = h("div", {class:"load-axis"});
+    MONTHS.forEach(function(m){ add(axis, h("span", {text:m})); });
+    add(sec, axis);
+    res.notes.forEach(function(n){ add(sec, h("p", {class:"r-note", text:n.text})); });
+    const heavy = [];
+    res.curve.weeks.forEach(function(lb, wk){ if (lb > 0.01) heavy.push([fmtDate(wk * 7 + 1), Math.round(lb) + " lb"]); });
+    if (heavy.length) add(sec, rTable(["Week of", "Ripening"], heavy.filter(function(_, i){ return i % 2 === 0; })));
+    add(doc, sec);
+  }
+
+  /* The work, the shopping and the record */
+  if (reportWants("tasks")){
+    const sec = h("section", {class:"r-section"});
+    add(sec, rTitle("The year's work", "Every job this plan implies, in order. Tick them off on paper if that is easier."));
+    const rows = allTasks().map(function(task){
+      return [fmtDate(task.day), TASK_KINDS[task.kind].label, task.plant.name + (task.pl.v ? ", " + task.pl.v : ""),
+              task.where, task.done ? "done " + fmtDate(task.doneDay) : "\u2610"];
+    });
+    add(sec, rows.length ? rTable(["Date", "Job", "Crop", "Where", "Done"], rows)
+                         : h("p", {class:"r-note", text:"Nothing planted, so there is nothing to do."}));
+    add(doc, sec);
+  }
+  if (reportWants("seeds")){
+    const rows = seedPlan();
+    const sec = h("section", {class:"r-section"});
+    add(sec, rTitle("Seed order",
+      "Squares times plants per square, divided by how likely the packet is to come up, less what is already in the box."));
+    add(sec, rows.length ? rTable(["Crop", "Variety", "Sq ft", "Plants", "Unit", "On hand", "Sow", "Buy"],
+      rows.map(function(r){
+        return [r.plant.name, r.v || "", r.squares, r.plants, r.unit, r.onHand || "", r.toSow, r.short || "\u2014"];
+      })) : h("p", {class:"r-note", text:"Nothing planted, so nothing to order."}));
+    add(doc, sec);
+  }
+  if (reportWants("journal")){
+    const entries = allPlantings().filter(function(e){
+      const a = e.pl.a || {};
+      return a.sown || a.up || a.out || a.first || a.last || a.yield || a.outcome || a.note;
+    });
+    const sec = h("section", {class:"r-section"});
+    add(sec, rTitle("The record", "What actually happened, against what was planned."));
+    add(sec, entries.length ? rTable(["Crop", "Where", "Sown", "Out", "First", "Last", "Yield", "How it went", "Note"],
+      entries.map(function(e){
+        const a = e.pl.a || {};
+        const d = function(v){ return v ? fmtDate(v > 365 ? v - 365 : v) : ""; };
+        return [plantName(e.pl.p) + (e.pl.v ? ", " + e.pl.v : ""),
+                e.pot ? e.bed.name : e.bed.name + " r" + (Math.floor(e.pl.i / e.bed.cols) + 1) + " c" + (e.pl.i % e.bed.cols + 1),
+                d(a.sown), d(a.out), d(a.first), d(a.last), a.yield || "",
+                a.outcome ? OUTCOMES.filter(function(o){ return o[0] === a.outcome; })[0][1] : "", a.note || ""];
+      })) : h("p", {class:"r-note", text:"Nothing recorded yet. The Record tab is where this fills in."}));
+    add(doc, sec);
+  }
+
+  /* The rest of the farm, briefly */
+  const last = h("section", {class:"r-section"});
+  add(last, rTitle("The rest of the farm", "What else is in this file."));
+  add(last, h("h3", {class:"r-block-head", text:"Layouts"}));
+  add(last, rTable(["Layout", "Year", "Beds", "Plantings"],
+    state.layouts.filter(function(x){ return !x.archived; }).map(function(x){
+      return [x.name + (x.id === l.id ? " (this one)" : ""), x.year || "",
+              x.beds.filter(function(b){ return b.kind !== "border"; }).length,
+              x.beds.reduce(function(a, b){ return a + (b.plantings || []).length; }, 0)];
+    })));
+  const tpls = allTemplates();
+  if (tpls.length){
+    add(last, h("h3", {class:"r-block-head", text:"Templates"}));
+    add(last, rTable(["Template", "Holds", "Plantings"],
+      tpls.map(function(x){ return [x.name, x.kind === "bed" ? "one bed" : "a whole plot", templateSize(x)]; })));
+  }
+  add(last, h("p", {class:"r-foot",
+    text:"Drawn from " + state.farm.name + " on " + new Date().toDateString() + " by " + APP.name + " v" + APP.version + "."}));
+  add(doc, last);
+  return doc;
+}
+
+/* ---------- opening, closing and printing ---------------------------------- */
+function openReport(){
+  closeReport();
+  const wrap = h("div", {class:"report-mode", id:"report-mode"});
+  const bar = h("div", {class:"report-bar"});
+  add(bar, h("b", {text:"Report preview"}));
+  add(bar, h("span", {class:"per",
+    text:"Print, then choose Save as PDF as the destination. Paper size and margins come from the print dialog."}));
+  add(bar, h("span", {class:"toolbar-gap"}));
+  add(bar, h("button", {class:"btn tiny", type:"button", text:"Print or save as PDF",
+    onclick:function(){ window.print(); }}));
+  add(bar, h("button", {class:"btn ghost tiny", type:"button", text:"Close", onclick:closeReport}));
+  add(wrap, bar);
+  const opts = h("div", {class:"report-bar report-opts"});
+  add(opts, h("span", {class:"per", text:"Sections"}));
+  REPORT_SECTIONS.forEach(function(sec){
+    add(opts, h("button", {class:"btn ghost tiny", type:"button", "aria-pressed":reportWants(sec[0]),
+      text:sec[1], onclick:function(){
+        state.ui.reportOff = state.ui.reportOff || {};
+        state.ui.reportOff[sec[0]] = reportWants(sec[0]);
+        persist();
+        openReport();
+      }}));
+  });
+  add(wrap, opts);
+  add(wrap, h("div", {class:"report-page"}, buildReport()));
+  document.body.appendChild(wrap);
+  document.body.classList.add("reporting");
+  ambience.stop();
+  wrap.focus();
+}
+function closeReport(){
+  const old = document.getElementById("report-mode");
+  if (old && old.parentNode) old.parentNode.removeChild(old);
+  document.body.classList.remove("reporting");
+  ambience.start();
+}
+
 /* ---------- about, self test, housekeeping -------------------------------- */
 /* Point this at the repo once it exists. It is the only outbound link in the app. */
 const REPO_URL = "https://github.com/mbparks";
@@ -4371,6 +4772,45 @@ function selfTest(){
       return o && o < 0.6;
     }).length;
     return faded ? faded + " rows are faded below six tenths" : true;
+  });
+  t("The report holds every section it says it does", function(){
+    const held = state.ui.reportOff;
+    state.ui.reportOff = {};
+    const doc = buildReport();
+    state.ui.reportOff = held;
+    const sections = doc.querySelectorAll(".r-section").length;
+    /* Cover, the named sections, and the tail piece about the rest of the farm. */
+    const want = REPORT_SECTIONS.length + 2;
+    if (sections !== want) return sections + " sections rather than " + want;
+    if (!doc.querySelector(".r-cover h1")) return "the cover has no name on it";
+    if (!doc.querySelector(".r-table")) return "nothing came out as a table";
+    return true;
+  });
+  t("Turning a section off leaves it out", function(){
+    const held = JSON.stringify(state.ui.reportOff || {});
+    state.ui.reportOff = {};
+    const full = buildReport().querySelectorAll(".r-section").length;
+    state.ui.reportOff = {seeds:true, journal:true};
+    const trimmed = buildReport().querySelectorAll(".r-section").length;
+    state.ui.reportOff = JSON.parse(held);
+    return trimmed === full - 2 ? true : "dropping two sections left " + trimmed + " of " + full;
+  });
+  t("The report prints as ink on white whatever the screen was", function(){
+    /* A garden journal printed in the night theme is a cartridge you do not get
+       back, so the print rules override the tokens rather than trusting them. */
+    let found = "";
+    Array.prototype.forEach.call(document.styleSheets, function(sheet){
+      let rules = null;
+      try { rules = sheet.cssRules; } catch (e) { return; }
+      Array.prototype.forEach.call(rules || [], function(rule){
+        if (rule.type === 4 && String(rule.conditionText || rule.media.mediaText).indexOf("print") >= 0)
+          found += rule.cssText;
+      });
+    });
+    if (!found) return "there are no print rules at all";
+    if (found.indexOf("--bg: #fff") < 0 && found.indexOf("--bg:#fff") < 0) return "print does not force a white page";
+    if (found.indexOf("break-before") < 0) return "nothing tells it where the pages break";
+    return true;
   });
   t("No two controls in one panel carry the same label", function(){
     /* A bed's editor had two buttons reading Apply, one for its size and one for
@@ -5172,6 +5612,7 @@ function renderAbout(){
   add(panel, h("h3", {class:"sec-title", text:"What it checks"}));
   add(panel, h("ul", {style:{margin:"0 0 10px 18px", padding:0, fontSize:"13.5px"}},
     h("li", {text:"Companions and conflicts, read both ways, with neighbours flagged harder than bed mates."}),
+    h("li", {text:"A report of the whole layout, printed or saved as PDF from the print dialog: the plot square by square, every bed, the calendar, the year's work, the seed order and the record."}),
     h("li", {text:"Templates: save a bed or a whole plot and put it back into any layout, matched by name then by size."}),
     h("li", {text:"What is due this week, read off the plantings, with a button that writes the date into the journal."}),
     h("li", {text:"What seed to order: squares times density, divided by how likely the packet is to come up, minus what is already in the box."}),
@@ -5228,7 +5669,8 @@ function renderAbout(){
     h("li", {text:"Beds sit in whole plot slots, so a plot of oddly sized beds lines up loosely rather than to scale."}),
 
     h("li", {text:"There is no service worker, because a browser will not register one from a file on disk. The manifest is there, so the app installs to a home screen when it is served, and it works offline either way by being one file you already have."}),
-    h("li", {text:"The browser working copy is per browser and per profile. The JSON file is the record that travels."})));
+    h("li", {text:"The browser working copy is per browser and per profile. The JSON file is the record that travels."}),
+    h("li", {text:"The report is made by printing rather than by writing a PDF file directly. No PDF library is vendored, because none could be fetched by a file running from a disk, and printing gives real selectable type rather than a picture of it. Paper size and margins come from the print dialog."})));
   add(host, p3);
 
   const p4 = h("div", {class:"panel"});
@@ -5343,6 +5785,7 @@ function boot(){
     e.target.value = "";
   });
   document.addEventListener("keydown", function(e){
+    if (e.key === "Escape" && document.getElementById("report-mode")){ closeReport(); return; }
     if (e.key === "Escape"){
       if (state.ui.selected){ state.ui.selected = null; renderPlanner(); hideTip(); }
       else if (state.ui.inspect){ state.ui.inspect = null; renderPlanner(); }
@@ -5353,6 +5796,9 @@ function boot(){
     }
     if (e.key === "y" && (e.ctrlKey || e.metaKey)){ e.preventDefault(); redo(); }
     if (e.key === "s" && (e.ctrlKey || e.metaKey)){ e.preventDefault(); saveFile(); }
+    if (e.key === "p" && (e.ctrlKey || e.metaKey) && !document.getElementById("report-mode")){
+      e.preventDefault(); openReport();
+    }
     if (state.ui.tab === "planner" && (e.key === "[" || e.key === "]")){
       const step = e.shiftKey ? 7 : 1;
       state.ui.day = Math.max(1, Math.min(365, state.ui.day + (e.key === "]" ? step : -step)));

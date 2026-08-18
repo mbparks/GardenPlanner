@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Garden Planner :: garden-planner.html :: v2.6.1 -->
+<!-- Garden Planner :: garden-planner.html :: v2.6.3 -->
 <html lang="en" data-theme="garden">
 <head>
 <meta charset="utf-8">
@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600&family=DM+Sans:wght@300;400;500&display=swap">
 <style>
-/* Garden Planner v2.6.1. Fonts are additive only: the local stacks below carry the
+/* Garden Planner v2.6.3. Fonts are additive only: the local stacks below carry the
    design if the remote sheet never loads (offline, file:// use). */
 :root{
   --font-display:"Lora","Iowan Old Style",Georgia,"Times New Roman",serif;
@@ -94,6 +94,9 @@ button,input,select,textarea{font-family:inherit; font-size:14px; color:inherit}
 
 main{max-width:1180px;margin:0 auto;padding:20px 16px 60px}
 .tab-body{margin-top:14px}
+/* The switch between the views of a tab is not just another row of buttons. */
+.sub-nav{margin:0 0 14px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.sub-nav .toggle-set .btn{min-height:42px;padding:8px 16px;font-weight:500}
 .toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px;
   padding:8px 10px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius)}
 .toolbar-gap{flex:1 1 auto}
@@ -130,22 +133,33 @@ main{max-width:1180px;margin:0 auto;padding:20px 16px 60px}
 .palette{position:sticky;top:10px}
 @media (max-width:860px){.palette{position:static}}
 .chips{display:flex;flex-direction:column;gap:4px;max-height:330px;overflow-y:auto;padding-right:2px}
-.chip{display:flex;align-items:center;gap:7px;padding:7px 10px;border-radius:20px;font-size:13px;
-  cursor:pointer;border:2px solid transparent;background:var(--panel-2);width:100%;text-align:left;min-height:38px}
-.chip .nm{flex:1}
-.chip .per{font-size:10px;color:var(--muted)}
-.chip[aria-pressed="true"]{border-color:var(--ink);box-shadow:0 2px 8px rgba(0,0,0,.18)}
-.chip .swatch{width:10px;height:10px;border-radius:50%;border:1px solid var(--line);flex:none}
-.filters{margin:8px 0 8px}
-.filters .toggle-set{flex-wrap:wrap}
+/* One shape for every plant. The colour comes from the plant's own mark and a
+   rule down its left edge, rather than tinting each row a different pastel. */
+.chip{display:flex;align-items:center;gap:9px;padding:7px 10px 7px 9px;border-radius:8px;font-size:13px;
+  cursor:pointer;background:var(--panel-2);width:100%;text-align:left;min-height:40px;
+  border:1px solid var(--line);border-left:3px solid var(--chip,var(--line-strong))}
+.chip:hover{background:var(--panel);border-color:var(--line-strong)}
+.chip .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chip .per{font-size:10px;color:var(--muted);font-variant-numeric:tabular-nums}
+.chip[aria-pressed="true"]{background:var(--panel);border-color:var(--accent);
+  box-shadow:inset 0 0 0 1px var(--accent);font-weight:600}
+.chip[aria-pressed="true"] .per{color:var(--accent)}
+.chip[aria-pressed="true"]::before{content:none}
+.chips{gap:5px}
+.filters{margin:8px 0 10px}
+.pill-set{display:flex;flex-wrap:wrap;gap:5px}
+.pill-set .btn{border-radius:20px;min-height:32px;padding:5px 13px;font-size:12px;font-weight:500}
+.pill-set .btn[aria-pressed="false"]{background:var(--panel-2);color:var(--muted);border-color:var(--line-strong)}
 /* Any toggle in the app reads the same way when it is on: filled, not merely
    tinted, with a tick so it does not rest on colour alone. */
 .btn[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
 .btn[aria-pressed="true"]:hover{background:var(--accent);filter:brightness(1.08)}
 .btn[aria-pressed="true"]::before{content:"\2713";margin-right:6px;font-weight:700}
 .btn.tiny[aria-pressed="true"]::before{margin-right:4px}
+.toggle-set .btn[aria-pressed="true"]::before{content:none}
 :root[data-theme="contrast"] .btn[aria-pressed="true"]{outline:2px solid var(--ink);outline-offset:-4px}
-.toggle-set{display:inline-flex;gap:0;border:1px solid var(--line-strong);border-radius:8px;overflow:hidden}
+.toggle-set{display:inline-flex;gap:0;border:1px solid var(--line-strong);border-radius:8px;
+  overflow:hidden;flex-wrap:nowrap;max-width:100%}
 .toggle-set .btn{border-radius:0;border:none;border-right:1px solid var(--line-strong);min-height:38px}
 .toggle-set .btn:last-child{border-right:none}
 .toggle-set .btn[aria-pressed="false"]{background:var(--panel);color:var(--muted)}
@@ -370,8 +384,8 @@ textarea.input-sm{font-size:13px;line-height:1.4}
 <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
 <script>
 "use strict";
-/* Garden Planner v2.6.1. Single file, no build step, no server, GPL-3.0. */
-const APP = { name: "Garden Planner", file: "garden-planner.html", version: "2.6.1", schema: 6 };
+/* Garden Planner v2.6.3. Single file, no build step, no server, GPL-3.0. */
+const APP = { name: "Garden Planner", file: "garden-planner.html", version: "2.6.3", schema: 6 };
 
 /* ---------- plant library -------------------------------------------------
    per   = plants per square foot (Square Foot Gardening densities)
@@ -726,6 +740,16 @@ function segmented(options, current, onPick, label){
   const set = h("div", {class:"toggle-set", role:"group", "aria-label":label || "Choose one"});
   options.forEach(function(o){
     add(set, h("button", {class:"btn tiny", type:"button", "aria-pressed":String(o[0]) === String(current),
+      text:o[1], onclick:function(){ onPick(o[0]); }}));
+  });
+  return set;
+}
+/* The same choice, for places too narrow to hold a single row. A segmented bar
+   that wraps stops being one control and starts being a broken box. */
+function pillSet(options, current, onPick, label){
+  const set = h("div", {class:"pill-set", role:"group", "aria-label":label || "Choose one"});
+  options.forEach(function(o){
+    add(set, h("button", {class:"btn ghost tiny", type:"button", "aria-pressed":String(o[0]) === String(current),
       text:o[1], onclick:function(){ onPick(o[0]); }}));
   });
   return set;
@@ -2189,7 +2213,7 @@ function renderInspector(){
   const wrap = h("div", {class:"row"});
   next.forEach(function(c){
     const p = c.plant;
-    add(wrap, h("button", {class:"chip", type:"button", style:{background:p.color + "22", width:"auto"},
+    add(wrap, h("button", {class:"chip", type:"button", style:{"--chip":p.color, width:"auto"},
       onclick:function(){
         snapshot();
         const res = addPlanting(bed, ins.idx, p.id, c.start);
@@ -2480,7 +2504,9 @@ function renderPalette(){
   add(box, h("input", {class:"input-sm", type:"search", placeholder:"Search plants", value:state.ui.search,
     "aria-label":"Search plants", style:{width:"100%"},
     oninput:function(e){ state.ui.search = e.target.value; renderPlanner(); }}));
-  add(box, h("div", {class:"filters"}, segmented(
+  /* Five choices in a narrow sidebar cannot be a segmented bar: it would wrap,
+     and a wrapped segmented bar is just a broken box. Pills wrap properly. */
+  add(box, h("div", {class:"filters"}, pillSet(
     [["all", "All"]].concat(TYPES.map(function(t){ return [t, t.charAt(0).toUpperCase() + t.slice(1)]; })),
     state.ui.filterType, function(v){ state.ui.filterType = v; renderPlanner(); }, "Kind of plant")));
   add(box, h("p", {class:"lede palette-hint", style:{margin:"0 0 8px"},
@@ -2496,14 +2522,13 @@ function renderPalette(){
   if (!shown.length) add(list, h("p", {class:"lede", text:"No plant matches that search. Clear the box or add it in the Library tab."}));
   shown.forEach(function(p){
     const chip = h("button", {class:"chip", type:"button", "aria-pressed":state.ui.selected === p.id,
-      style:{background:p.color + "22"},
+      style:{"--chip":p.color},
       onclick:function(){ state.ui.selected = (state.ui.selected === p.id) ? null : p.id; renderPlanner(); },
       onmouseenter:function(){ showTip(chip, p); }, onmouseleave:hideTip,
       onfocus:function(){ showTip(chip, p); }, onblur:hideTip},
-      h("span", {class:"swatch", style:{background:p.color}}),
-      glyph(p, "17px"),
+      glyph(p, "19px"),
       h("span", {class:"nm", text:p.name}),
-      h("span", {class:"per", text:p.span > 1 ? (p.span + "x" + p.span) : (p.per + "/sq ft")}));
+      h("span", {class:"per", text:p.span > 1 ? (p.span + " by " + p.span) : (p.per + " per sq ft")}));
     add(list, chip);
   });
   add(box, list);
@@ -2861,9 +2886,13 @@ function renderCalendar(){
   const host = qs("#panel-calendar");
   clear(host);
   const view = state.ui.calView || "timing";
-  add(host, h("h2", {text:view === "timing" ? "Planting calendar"
+  add(host, h("h2", {text:"Season"}));
+  add(host, h("p", {class:"lede",
+    text:"The year at a glance, three ways: when each crop wants sowing and picking, what each square is doing month by month, and how much lands each week."}));
+  add(host, h("div", {class:"sub-nav"},
+    segmented(CAL_VIEWS, view, function(v){ state.ui.calView = v; persist(); renderCalendar(); }, "Which view")));
+  add(host, h("h3", {class:"sec-title", text:view === "timing" ? "Planting calendar"
                         : (view === "beds" ? "Bed by bed, across the year" : "Harvest load")}));
-  add(host, segmented(CAL_VIEWS, view, function(v){ state.ui.calView = v; persist(); renderCalendar(); }, "Which view"));
   if (view === "beds"){ renderOccupancy(host); return; }
   if (view === "load"){ renderHarvestLoad(host); return; }
   const f = farmFrost();
@@ -3399,12 +3428,26 @@ function taskLine(t, today){
     onclick:function(){ markTaskDone(t, todayDoy()); }}));
   return row;
 }
-const DO_VIEWS = [["week", "What is due"], ["seeds", "Seed order"]];
+/* Two jobs live here, so both say what they are holding. A bare switcher above a
+   near identical row of horizon buttons is how the seed order went missing. */
 function renderDo(){
   const host = qs("#panel-do");
   clear(host);
   const view = state.ui.doView || "week";
-  add(host, segmented(DO_VIEWS, view, function(v){ state.ui.doView = v; persist(); renderDo(); }, "Which list"));
+  const today = todayDoy();
+  const due = allTasks().filter(function(t){
+    if (t.done) return false;
+    const d = daysBetween(today, t.day);
+    return (d >= 0 && d < (Number(state.ui.horizon) || 7)) || (d < 0 && d >= -21);
+  }).length;
+  const short = seedPlan().filter(function(r){ return r.short > 0; }).length;
+  add(host, h("h2", {text:"Do"}));
+  add(host, h("p", {class:"lede",
+    text:"The two lists the plan can work out for itself: what needs doing in the garden, and what needs ordering before it can."}));
+  add(host, h("div", {class:"sub-nav"}, segmented(
+    [["week", "What is due" + (due ? " (" + due + ")" : "")],
+     ["seeds", "Seed order" + (short ? " (" + short + " to buy)" : "")]],
+    view, function(v){ state.ui.doView = v; persist(); renderDo(); }, "Which list")));
   const body = h("div", {class:"tab-body"});
   add(host, body);
   if (view === "seeds") renderSeeds(body); else renderWeek(body);
@@ -3417,7 +3460,7 @@ function renderWeek(host){
      starts at the turn of its own year and nothing in it is late. */
   const today = ahead ? 1 : todayDoy();
   const span = ahead ? 365 : (Number(state.ui.horizon) || 7);
-  add(host, h("h2", {text:ahead ? ("The season ahead, " + year) : "This week"}));
+  add(host, h("h3", {class:"sec-title", text:ahead ? ("The season ahead, " + year) : "This week"}));
   add(host, h("p", {class:"lede",
     text:ahead
       ? (l.name + " is planned for " + year + ", so this is the whole run of work in order rather than a list for today.")
@@ -3460,7 +3503,7 @@ function renderWeek(host){
 function renderSeeds(host){
   const rows = seedPlan();
   const year = Number(activeLayout().year) || new Date().getFullYear();
-  add(host, h("h2", {text:"Seed order"}));
+  add(host, h("h3", {class:"sec-title", text:"Seed order for " + year}));
   add(host, h("p", {class:"lede",
     text:"Squares times plants per square, divided by how well the seed is likely to come up, for " +
          activeLayout().name + ". Tell it what is in the box and it will only ask you to buy the difference."}));
@@ -3884,6 +3927,45 @@ function selfTest(){
       return o && o < 0.6;
     }).length;
     return faded ? faded + " rows are faded below six tenths" : true;
+  });
+  t("A segmented bar never wraps, and wrapping choices use pills", function(){
+    /* A segmented control is one row by definition. Five plant filters in a
+       narrow sidebar wrapped it into a broken box with dangling dividers. */
+    const styles = getComputedStyle(document.documentElement);
+    const bad = [];
+    Array.prototype.forEach.call(document.querySelectorAll(".toggle-set"), function(set){
+      if (getComputedStyle(set).flexWrap !== "nowrap") bad.push("a segmented bar is allowed to wrap");
+      if (set.querySelectorAll("button").length > 4)
+        bad.push("a segmented bar carries " + set.querySelectorAll("button").length + " choices, which is a pill set's job");
+    });
+    Array.prototype.forEach.call(document.querySelectorAll(".pill-set"), function(set){
+      const on = set.querySelectorAll('button[aria-pressed="true"]').length;
+      if (on !== 1) bad.push(on + " pills are marked on in one set");
+    });
+    return bad.length ? Array.from(new Set(bad)).join(", ") : true;
+  });
+  t("A tab with more than one view says so before it shows one", function(){
+    /* The seed order went missing because the switcher sat above the heading and
+       looked like the row of buttons underneath it. */
+    const held = state.ui.tab;
+    const bad = [];
+    ["do", "calendar"].forEach(function(tab){
+      state.ui.tab = tab;
+      render();
+      const panel = document.getElementById("panel-" + tab);
+      const kids = Array.prototype.filter.call(panel.children, function(el){ return el.tagName !== "SCRIPT"; });
+      if (!kids.length) { bad.push(tab + " is empty"); return; }
+      if (kids[0].tagName !== "H2") bad.push(tab + " opens with " + kids[0].tagName.toLowerCase() + " rather than its name");
+      const nav = panel.querySelector(".sub-nav");
+      if (!nav) { bad.push(tab + " has no view switcher"); return; }
+      if (nav.compareDocumentPosition(kids[0]) & Node.DOCUMENT_POSITION_FOLLOWING === 0)
+        bad.push(tab + " switches views above its own heading");
+      const choices = nav.querySelectorAll("button[aria-pressed]").length;
+      if (choices < 2) bad.push(tab + " has a switcher with " + choices + " choice");
+    });
+    state.ui.tab = held;
+    render();
+    return bad.length ? bad.join(", ") : true;
   });
   t("Every tab has a panel and every panel has a tab", function(){
     const missing = TABS.filter(function(t){ return !document.getElementById("panel-" + t[0]); })
